@@ -293,7 +293,6 @@ function MesaiTab({ oturum, saat, tarihMetni, lokasyonAyarlandi }) {
     setKonumDurum('bekliyor'); setKonumMesaj('');
     setQrDurum('bekliyor'); setQrMesaj('');
   }
-  useEffect(() => { konumSifirla(); }, [seciliLokasyon]);
 
   const hedefLokasyon = acikKayit
     ? lokasyonlar.find((l) => l.ad === acikKayit.lokasyon)
@@ -323,43 +322,20 @@ function MesaiTab({ oturum, saat, tarihMetni, lokasyonAyarlandi }) {
     }
   }
 
-  async function qrOkundu(kod) {
+  function qrOkundu(kod) {
     if (!acikKayit) {
-      // GİRİŞ DOĞRULAMASI & ANINDA TEK ADIMDA GİRİŞ
+      // GİRİŞ İÇİN ŞANTİYE QR DOĞRULAMASI
       const bulunanLokasyon = lokasyonlar.find((l) => l.qr_kodu === kod || l.ad === kod);
       if (bulunanLokasyon) {
         setSeciliLokasyon(bulunanLokasyon.ad);
         setQrDurum('basarili');
-        setQrMesaj('✅ Giriş QR kodu doğrulandı: ' + bulunanLokasyon.ad);
-
-        if (ayarlar.konum_dogrulama_aktif && konumDurum !== 'basarili') {
-          setMesaj({ tip: 'err', metin: 'QR doğrulandı. Lütfen konum doğrulamasını da tamamlayın.' });
-          return;
-        }
-
-        const now = new Date().toISOString();
-        const { error } = await supabase.from('giris_cikis').insert({
-          personel_no: oturum.personel_no,
-          ad: oturum.ad,
-          giris_saati: now,
-          durum: 'Açık',
-          lokasyon: bulunanLokasyon.ad,
-        });
-
-        if (error) {
-          setQrDurum('basarisiz');
-          setQrMesaj('Giriş kaydedilemedi: ' + error.message);
-          setMesaj({ tip: 'err', metin: error.message });
-        } else {
-          setMesaj({ tip: 'ok', metin: `✅ ${bulunanLokasyon.ad} şantiyesine mesai girişiniz başarıyla kaydedildi.` });
-          durumYukle();
-        }
+        setQrMesaj('✅ Şantiye QR kodu doğrulandı: ' + bulunanLokasyon.ad);
       } else {
         setQrDurum('basarisiz');
         setQrMesaj('❌ Tanımsız veya geçersiz şantiye QR kodu.');
       }
     } else {
-      // ÇIKIŞ DOĞRULAMASI & ANINDA TEK ADIMDA ÇIKIŞ
+      // ÇIKIŞ İÇİN ŞANTİYE QR DOĞRULAMASI
       const eslesenLokasyon = lokasyonlar.find((l) => l.qr_kodu === kod);
       const mevcutLokasyonAdi = acikKayit.lokasyon;
       const mevcutLokasyonObj = lokasyonlar.find((l) => l.ad === mevcutLokasyonAdi);
@@ -369,33 +345,6 @@ function MesaiTab({ oturum, saat, tarihMetni, lokasyonAyarlandi }) {
       if (gecerli) {
         setQrDurum('basarili');
         setQrMesaj('✅ Çıkış QR kodu doğrulandı: ' + mevcutLokasyonAdi);
-
-        if (ayarlar.konum_dogrulama_aktif && konumDurum !== 'basarili') {
-          setMesaj({ tip: 'err', metin: 'QR doğrulandı. Lütfen konum doğrulamasını da tamamlayın.' });
-          return;
-        }
-
-        const now = new Date();
-        const girisSaati = new Date(acikKayit.giris_saati);
-        const hamSure = (now - girisSaati) / 3600000;
-        const sureSaat = Math.round(hamSure * 100) / 100;
-
-        const { error } = await supabase
-          .from('giris_cikis')
-          .update({ cikis_saati: now.toISOString(), sure_saat: sureSaat, durum: 'Kapalı' })
-          .eq('id', acikKayit.id);
-
-        if (error) {
-          setQrDurum('basarisiz');
-          setQrMesaj('Çıkış kaydedilemedi: ' + error.message);
-          setMesaj({ tip: 'err', metin: error.message });
-        } else {
-          setMesaj({ 
-            tip: 'ok', 
-            metin: `✅ ${mevcutLokasyonAdi} şantiyesinden çıkış kaydedildi. Toplam Süre: ${sureFormatla(sureSaat)}` 
-          });
-          durumYukle();
-        }
       } else if (eslesenLokasyon) {
         setQrDurum('basarisiz');
         setQrMesaj(`❌ Bu QR kod "${eslesenLokasyon.ad}" şantiyesine ait. Lütfen çıkış yaptığınız "${mevcutLokasyonAdi}" şantiyesinin QR kodunu okutun.`);
