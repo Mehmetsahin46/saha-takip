@@ -1850,32 +1850,34 @@ function PersonelFinansTab({ oturum }) {
           </div>
 
           <h3 style={{ fontSize: 14, margin: '20px 0 8px 0' }}>Dönem Finansal Hareketleri (Avans, Harcama, Prim)</h3>
-          <table>
-            <thead>
-              <tr><th>Tarih</th><th>İşlem Türü</th><th>Şantiye / Kasa</th><th>Tutar</th><th>Açıklama</th></tr>
-            </thead>
-            <tbody>
-              {bilgi.masraflar.map((m) => {
-                const kat = getIslemKategori(m);
-                return (
-                  <tr key={m.id}>
-                    <td>{new Date(m.tarih || m.created_at).toLocaleDateString('tr-TR')}</td>
-                    <td>
-                      <span className={`status-tag ${kat === 'prim' ? 'open' : ''}`}>
-                        {kat === 'avans' ? '💵 Avans' : (kat === 'prim' ? '🎁 Prim' : (kat === 'kesinti' ? '⚠️ Kesinti' : (kat === 'maas_odeme' ? '💰 Maaş' : '🧾 Masraf')))}
-                      </span>
-                    </td>
-                    <td>{m.lokasyon}</td>
-                    <td><b>{formatPLN(m.toplam)}</b></td>
-                    <td style={{ fontSize: 12, color: 'var(--ink-soft)', maxWidth: 280 }}>{formatIslemAciklama(m)}</td>
-                  </tr>
-                );
-              })}
-              {bilgi.masraflar.length === 0 && (
-                <tr><td colSpan={5} style={{ color: 'var(--ink-soft)' }}>Bu ay kayıtlı avans veya harcama hareketiniz bulunmuyor.</td></tr>
-              )}
-            </tbody>
-          </table>
+          <div style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch', marginTop: 10 }}>
+            <table style={{ width: '100%', minWidth: 550 }}>
+              <thead>
+                <tr><th>Tarih</th><th>İşlem Türü</th><th>Şantiye / Kasa</th><th>Tutar</th><th>Açıklama</th></tr>
+              </thead>
+              <tbody>
+                {bilgi.masraflar.map((m) => {
+                  const kat = getIslemKategori(m);
+                  return (
+                    <tr key={m.id}>
+                      <td style={{ fontSize: 11.5, whiteSpace: 'nowrap' }}>{new Date(m.tarih || m.created_at).toLocaleDateString('tr-TR')}</td>
+                      <td>
+                        <span className={`status-tag ${kat === 'prim' ? 'open' : ''}`}>
+                          {kat === 'avans' ? 'Avans' : (kat === 'prim' ? 'Prim' : (kat === 'kesinti' ? 'Kesinti' : (kat === 'maas_odeme' ? 'Maaş' : 'Masraf')))}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: 12 }}>{m.lokasyon}</td>
+                      <td><b>{formatPLN(m.toplam)}</b></td>
+                      <td style={{ fontSize: 12, color: 'var(--ink-soft)', maxWidth: 280 }}>{formatIslemAciklama(m)}</td>
+                    </tr>
+                  );
+                })}
+                {bilgi.masraflar.length === 0 && (
+                  <tr><td colSpan={5} style={{ color: 'var(--ink-soft)', padding: 14 }}>Bu ay kayıtlı avans veya harcama hareketiniz bulunmuyor.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
     </div>

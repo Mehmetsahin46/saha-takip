@@ -223,9 +223,10 @@ body {
 
 /* MAIN CONTENT & CARDS */
 .content {
-  max-width: 1240px;
-  margin: 24px auto;
-  padding: 0 20px;
+  max-width: 100%;
+  width: 100%;
+  margin: 16px auto;
+  padding: 0 24px;
 }
 
 .card {

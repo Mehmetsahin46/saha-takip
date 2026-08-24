@@ -2509,7 +2509,7 @@ function PuantajTab() {
           <table style={{ fontSize: 11, borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th style={{ position: 'sticky', left: 0, background: 'var(--card)', minWidth: 140, textAlign: 'left' }}>Personel</th>
+                <th style={{ position: 'sticky', left: 0, zIndex: 5, background: 'var(--bg-soft)', minWidth: 140, textAlign: 'left', borderRight: '2px solid var(--border)' }}>Personel</th>
                 {Array.from({ length: gunSayisi }, (_, i) => i + 1).map((gun) => {
                   const kontrol = puantajDuzenlemeKontrol(yil, ay, gun, yoneticiKilitsiz);
                   return (
@@ -2541,7 +2541,7 @@ function PuantajTab() {
 
                 return (
                   <tr key={p.personel_no}>
-                    <td style={{ position: 'sticky', left: 0, background: 'var(--card)', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                    <td style={{ position: 'sticky', left: 0, zIndex: 4, background: 'var(--card)', fontWeight: 600, whiteSpace: 'nowrap', borderRight: '2px solid var(--border)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span>{p.ad}</span>
                         {ayrildiMi && (
@@ -3007,14 +3007,19 @@ function HakedisTab() {
           <table>
             <thead>
               <tr>
-                <th>Personel</th><th>Görevi</th><th>Saatlik (PLN)</th><th>Çalışılan Süre</th><th>Çalışılan Gün</th><th>FM</th>
-                <th>Brüt Hakediş</th><th>Masraf (+)</th><th>Prim (+)</th><th>Avans (-)</th><th>Kesinti (-)</th><th>Net Kalan Maaş</th><th>İşlemler</th>
+                <th style={{ position: 'sticky', left: 0, zIndex: 5, background: 'var(--bg-soft)', minWidth: 150, borderRight: '2px solid var(--border)' }}>Personel</th>
+                <th>Görevi</th><th>Saatlik (PLN)</th><th>Çalışılan Süre</th><th>Çalışılan Gün</th><th>FM</th>
+                <th>Brüt Hakediş</th><th>Masraf (+)</th><th>Prim (+)</th><th>Avans (-)</th><th>Kesinti (-)</th><th>Net Kalan Maaş</th>
+                <th style={{ minWidth: 165 }}>İşlemler</th>
               </tr>
             </thead>
             <tbody>
               {satirlar.map((s) => (
                 <tr key={s.personel_no}>
-                  <td><b>{s.ad}</b><div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{s.personel_no}</div></td>
+                  <td style={{ position: 'sticky', left: 0, zIndex: 4, background: 'var(--card)', minWidth: 150, borderRight: '2px solid var(--border)' }}>
+                    <b>{s.ad}</b>
+                    <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{s.personel_no}</div>
+                  </td>
                   <td>{s.rol}</td>
                   <td>{formatPLN(s.saatlikUcret)}/sa</td>
                   <td><b style={{ color: 'var(--accent-patron)', fontSize: 13 }}>{sureFormatla(s.calisilanSaat)}</b></td>
@@ -3029,27 +3034,31 @@ function HakedisTab() {
                     {formatPLN(s.netOdenecek)}
                   </td>
                   <td>
-                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center', minWidth: 160 }}>
                       <button
+                        type="button"
                         className="action btn-secondary"
-                        style={{ width: 'auto', margin: 0, padding: '4px 8px', fontSize: 11 }}
+                        style={{ width: '68px', height: '28px', margin: 0, padding: '0 6px', fontSize: '11.5px', fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                         onClick={() => bordroPdfIndir(s)}
                         title="Bordro PDF İndir"
                       >
-                        📄 Bordro
+                        Bordro
                       </button>
                       {s.netOdenecek > 0 && (
                         <button
+                          type="button"
                           className="action btn-punch"
-                          style={{ width: 'auto', margin: 0, padding: '4px 10px', fontSize: 11, background: '#16a34a' }}
+                          style={{ width: '80px', height: '28px', margin: 0, padding: '0 6px', fontSize: '11.5px', fontWeight: 600, background: '#16a34a', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', whiteSpace: 'nowrap', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                           onClick={() => maasKapat(s)}
                           disabled={islemYapiliyor}
                         >
-                          💵 Maaşı Öde
+                          Maaş Öde
                         </button>
                       )}
                       {s.netOdenecek <= 0 && s.odenmisMaas > 0 && (
-                        <span className="status-tag open">✓ Ödendi</span>
+                        <span className="status-tag open" style={{ width: '80px', height: '28px', margin: 0, padding: '0 6px', fontSize: '11.5px', fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
+                          Ödendi
+                        </span>
                       )}
                     </div>
                   </td>
@@ -3487,33 +3496,35 @@ function PersonelCariEkstreTab() {
           </div>
 
           <h3 style={{ fontSize: 14, margin: '20px 0 8px 0' }}>Dönem İçi Harcama, Avans ve Ödeme Dökümü</h3>
-          <table>
-            <thead>
-              <tr><th>Tarih</th><th>İşlem Türü</th><th>Şantiye / Kasa</th><th>Tutar</th><th>Fiş / Belge</th><th>Açıklama</th></tr>
-            </thead>
-            <tbody>
-              {ekstre.hareketler.map((m) => {
-                const kat = getIslemKategori(m);
-                return (
-                  <tr key={m.id}>
-                    <td>{new Date(m.tarih || m.created_at).toLocaleDateString('tr-TR')}</td>
-                    <td>
-                      <span className={`status-tag ${kat === 'prim' ? 'open' : ''}`}>
-                        {kat === 'avans' ? '💵 Avans' : (kat === 'prim' ? '🎁 Prim' : (kat === 'kesinti' ? '⚠️ Kesinti' : (kat === 'maas_odeme' ? '💰 Maaş Ödemesi' : '🧾 Şantiye Masrafı')))}
-                      </span>
-                    </td>
-                    <td>{m.lokasyon}</td>
-                    <td><b>{formatPLN(m.toplam)}</b></td>
-                    <td>{m.fis_no || '—'}</td>
-                    <td style={{ fontSize: 11, color: 'var(--ink-soft)', maxWidth: 280 }}>{formatIslemAciklama(m)}</td>
-                  </tr>
-                );
-              })}
-              {ekstre.hareketler.length === 0 && (
-                <tr><td colSpan={6} style={{ color: 'var(--ink-soft)' }}>Bu tarih aralığında masraf veya avans hareketi bulunamadı.</td></tr>
-              )}
-            </tbody>
-          </table>
+          <div style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch', marginTop: 10 }}>
+            <table style={{ width: '100%', minWidth: 600 }}>
+              <thead>
+                <tr><th>Tarih</th><th>İşlem Türü</th><th>Şantiye / Kasa</th><th>Tutar</th><th>Fiş / Belge</th><th>Açıklama</th></tr>
+              </thead>
+              <tbody>
+                {ekstre.hareketler.map((m) => {
+                  const kat = getIslemKategori(m);
+                  return (
+                    <tr key={m.id}>
+                      <td style={{ fontSize: 11.5, whiteSpace: 'nowrap' }}>{new Date(m.tarih || m.created_at).toLocaleDateString('tr-TR')}</td>
+                      <td>
+                        <span className={`status-tag ${kat === 'prim' ? 'open' : ''}`}>
+                          {kat === 'avans' ? 'Avans' : (kat === 'prim' ? 'Prim' : (kat === 'kesinti' ? 'Kesinti' : (kat === 'maas_odeme' ? 'Maaş Ödemesi' : 'Şantiye Masrafı')))}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: 12 }}>{m.lokasyon}</td>
+                      <td><b>{formatPLN(m.toplam)}</b></td>
+                      <td style={{ fontSize: 11.5, color: 'var(--ink-soft)' }}>{m.fis_no || '—'}</td>
+                      <td style={{ fontSize: 11.5, color: 'var(--ink-soft)', maxWidth: 300 }}>{formatIslemAciklama(m)}</td>
+                    </tr>
+                  );
+                })}
+                {ekstre.hareketler.length === 0 && (
+                  <tr><td colSpan={6} style={{ color: 'var(--ink-soft)', padding: 14 }}>Bu tarih aralığında masraf veya avans hareketi bulunamadı.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
     </div>
