@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { getInitialTheme, temaUygula, temaDegistir } from '@/lib/theme';
 import { useLocale } from '@/lib/i18n';
 import DilSecici from '@/components/DilSecici';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,13 +14,8 @@ export default function LoginPage() {
   const [sifre, setSifre] = useState('');
   const [hata, setHata] = useState('');
   const [yukleniyor, setYukleniyor] = useState(false);
-  const [tema, setTema] = useState('light');
 
   useEffect(() => {
-    const baslangicTema = getInitialTheme();
-    setTema(baslangicTema);
-    temaUygula(baslangicTema);
-
     // Aktif oturum varsa otomatik yönlendir
     const kayit = localStorage.getItem('aktifOturum');
     if (kayit) {
@@ -97,21 +92,24 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div className="card" style={{ maxWidth: 420, width: '100%', padding: '28px 24px', boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <span className="brand" style={{ fontSize: 22 }}>🏗️ {t('appAdi')}</span>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, background: 'var(--bg)' }}>
+      <div className="card" style={{ maxWidth: 430, width: '100%', padding: '32px 28px', borderRadius: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--accent-patron)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 16 }}>
+              S
+            </div>
+            <span className="brand" style={{ fontSize: 18 }}>{t('appAdi')}</span>
+          </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <DilSecici />
-            <button className="theme-toggle" onClick={() => setTema(temaDegistir(tema))}>
-              {tema === 'dark' ? '☀️' : '🌙'}
-            </button>
+            <ThemeToggle />
           </div>
         </div>
 
-        <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 4, color: 'var(--ink)' }}>Sisteme Giriş Yap</h2>
-        <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 18 }}>
-          Personel numaranız ve şifrenizle oturum açın.
+        <h1 style={{ fontSize: 20, fontWeight: 800, marginBottom: 6, color: 'var(--ink)', letterSpacing: '-0.02em' }}>Sisteme Giriş Yap</h1>
+        <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 20 }}>
+          Şantiye ve personel yönetim paneline erişmek için kimlik bilgilerinizi girin.
         </div>
 
         <form onSubmit={girisYap}>
@@ -120,9 +118,9 @@ export default function LoginPage() {
             type="text"
             value={personelNo}
             onChange={(e) => setPersonelNo(e.target.value)}
-            placeholder="örn. 1000"
+            placeholder="Örn: 1001"
             autoFocus
-            style={{ marginBottom: 10 }}
+            style={{ marginBottom: 12 }}
           />
 
           <label style={{ fontSize: 12, fontWeight: 700 }}>Şifre</label>
@@ -131,57 +129,57 @@ export default function LoginPage() {
             value={sifre}
             onChange={(e) => setSifre(e.target.value)}
             placeholder="••••"
-            style={{ marginBottom: 14 }}
+            style={{ marginBottom: 16 }}
           />
 
           <button
             type="submit"
-            className="action btn-punch"
+            className="action btn-ai"
             disabled={yukleniyor}
-            style={{ background: 'var(--accent-patron)', color: '#fff', fontSize: 15, padding: 12 }}
+            style={{ fontSize: 14, padding: 12 }}
           >
-            {yukleniyor ? 'Giriş Yapılıyor...' : 'Giriş Yap →'}
+            {yukleniyor ? 'Giriş Yapılıyor...' : 'Oturum Aç'}
           </button>
         </form>
 
         {hata && <div className="feedback err" style={{ marginTop: 14 }}>{hata}</div>}
 
-        <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', marginBottom: 8, textAlign: 'center' }}>
+        <div style={{ marginTop: 24, paddingTop: 18, borderTop: '1px solid var(--border)' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', marginBottom: 10, textAlign: 'center', letterSpacing: '0.04em' }}>
             HIZLI TEST GİRİŞLERİ
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <button
               type="button"
               className="action btn-secondary"
-              style={{ margin: 0, padding: '7px 8px', fontSize: 11 }}
+              style={{ margin: 0, padding: '8px 10px', fontSize: 11.5 }}
               onClick={() => hizliGiris('9001', 'admin123')}
             >
-              👔 Patron (9001)
+              Patron (9001)
             </button>
             <button
               type="button"
               className="action btn-secondary"
-              style={{ margin: 0, padding: '7px 8px', fontSize: 11 }}
+              style={{ margin: 0, padding: '8px 10px', fontSize: 11.5 }}
               onClick={() => hizliGiris('1001', '1234')}
             >
-              👷 Formen (1001)
+              Formen (1001)
             </button>
             <button
               type="button"
               className="action btn-secondary"
-              style={{ margin: 0, padding: '7px 8px', fontSize: 11 }}
+              style={{ margin: 0, padding: '8px 10px', fontSize: 11.5 }}
               onClick={() => hizliGiris('1002', '1234')}
             >
-              🔨 Mehmet (1002)
+              Usta - Ali (1002)
             </button>
             <button
               type="button"
               className="action btn-secondary"
-              style={{ margin: 0, padding: '7px 8px', fontSize: 11 }}
+              style={{ margin: 0, padding: '8px 10px', fontSize: 11.5 }}
               onClick={() => hizliGiris('1003', '1234')}
             >
-              🧱 Ayşe (1003)
+              İşçi - Can (1003)
             </button>
           </div>
         </div>
@@ -189,3 +187,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

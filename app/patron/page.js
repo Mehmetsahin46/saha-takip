@@ -4,13 +4,16 @@ import { useEffect, useState, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { getInitialTheme, temaUygula, temaDegistir } from '@/lib/theme';
 import { konumAl } from '@/lib/geo';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 import { useLocale } from '@/lib/i18n';
 import DilSecici from '@/components/DilSecici';
+import ThemeToggle from '@/components/ThemeToggle';
+import AracFiloTab from '@/components/patron/AracFiloTab';
+import ProjelerModulu from '@/components/ProjelerModulu';
+import DepoEkipmanTab from '@/components/patron/DepoEkipmanTab';
 
 const KM_BIRIM_MALIYET = 5; // PLN / km, tahmini yakıt + aşınma
 
@@ -160,6 +163,7 @@ export default function PatronPanel() {
       <div className="tabbar">
         <button className={tab === 'genel' ? 'active-patron' : ''} onClick={() => setTab('genel')}>📊 Genel Bakış</button>
         <button className={tab === 'araclar' ? 'active-patron' : ''} onClick={() => setTab('araclar')}>{t('sekmeAracFilosu')}</button>
+        <button className={tab === 'depoEkipman' ? 'active-patron' : ''} onClick={() => setTab('depoEkipman')}>📦 {t('sekmeDepoEkipman') || 'Depo & Ekipman'}</button>
         <button className={tab === 'gorevler' ? 'active-patron' : ''} onClick={() => setTab('gorevler')}>{t('sekmeGorevler')}</button>
         <button className={tab === 'defter' ? 'active-patron' : ''} onClick={() => setTab('defter')}>
           📋 Günlük Faaliyet Raporu{yeniRaporSayisi > 0 ? ' (' + yeniRaporSayisi + ')' : ''}
@@ -172,12 +176,13 @@ export default function PatronPanel() {
       </div>
       <div className="content">
         {tab === 'genel' && <GenelBakis onSekmeDegistir={setTab} />}
-        {tab === 'araclar' && <Araclar />}
+        {tab === 'araclar' && <AracFiloTab />}
+        {tab === 'depoEkipman' && <DepoEkipmanTab />}
         {tab === 'gorevler' && <GorevlerTab />}
         {tab === 'defter' && <SantiyeDefteriTab onDurumDegisti={defterBildirimYukle} />}
         {tab === 'finans' && <FinansTab />}
         {tab === 'personelDefteri' && <PersonelYonetimiTab />}
-        {tab === 'projeler' && <ProjelerTab />}
+        {tab === 'projeler' && <ProjelerModulu />}
         {tab === 'teklifler' && <Lokasyonlar />}
         {tab === 'ayarlar' && <Ayarlar />}
       </div>

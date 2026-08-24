@@ -4,11 +4,14 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import jsPDF from 'jspdf';
 import { supabase } from '@/lib/supabase';
-import { getInitialTheme, temaUygula, temaDegistir } from '@/lib/theme';
 import { konumAl, mesafeMetre } from '@/lib/geo';
 import QrOkuyucu from '@/components/QrOkuyucu';
 import { useLocale } from '@/lib/i18n';
 import DilSecici from '@/components/DilSecici';
+import ThemeToggle from '@/components/ThemeToggle';
+import AracTab from '@/components/personel/AracTab';
+import ProjelerModulu from '@/components/ProjelerModulu';
+import EkipmanTab from '@/components/personel/EkipmanTab';
 
 function sureFormatla(saatOndalik) {
   const toplamDakika = Math.round((Number(saatOndalik) || 0) * 60);
@@ -31,7 +34,6 @@ export default function PersonelPanel() {
   const [saat, setSaat] = useState('');
   const [tarihMetni, setTarihMetni] = useState('');
   const [aktifLokasyon, setAktifLokasyon] = useState(null);
-  const [tema, setTema] = useState('light');
   
   const [aktifGorevSayisi, setAktifGorevSayisi] = useState(0);
   const [bildirimler, setBildirimler] = useState([]); 
@@ -48,12 +50,6 @@ export default function PersonelPanel() {
       router.push('/');
     }
   }, [router]);
-
-  useEffect(() => {
-    const baslangicTema = getInitialTheme();
-    setTema(baslangicTema);
-    temaUygula(baslangicTema);
-  }, []);
 
   useEffect(() => {
     const tick = () => {
@@ -98,7 +94,7 @@ export default function PersonelPanel() {
             const yeni = payload.new;
             if (Array.isArray(yeni.atanan_personel_no) && yeni.atanan_personel_no.includes(oturum.personel_no)) {
               if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-                new Notification('📋 Yeni Görev Atandı!', {
+                new Notification('Yeni Görev Atandı', {
                   body: yeni.baslik + (yeni.lokasyon ? ' — ' + yeni.lokasyon : ''),
                   icon: '/favicon.ico',
                 });
@@ -122,22 +118,45 @@ export default function PersonelPanel() {
   return (
     <div>
       <div className="app-header" style={{ position: 'relative' }}>
-        <span className="brand">{t('appAdi')}</span>
-        <span className="who">{t('merhaba')}, <b>{oturum.ad}</b> {oturum.rol === 'formen' && '(' + t('rolFormen') + ')'}</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 34, height: 34, borderRadius: 8, background: oturum.rol === 'formen' ? '#2563eb' : 'var(--accent-personel)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, fontSize: 16 }}>
+            S
+          </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontWeight: 900, fontSize: 14, letterSpacing: 0.5, color: 'var(--ink)' }}>
+                {oturum.rol === 'formen' ? 'SAHA TAKİP FORMEN' : 'SAHA TAKİP PERSONEL'}
+              </span>
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--ink-soft)', fontWeight: 600 }}>
+              👤 {oturum.ad} · {oturum.rol === 'formen' ? 'Saha Şefi / Formen' : 'Saha Çalışanı'}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
           <DilSecici />
+          <ThemeToggle />
+          
+          {/* Görev Bildirim Butonu */}
           <div style={{ position: 'relative' }}>
             <button 
+              type="button"
               className="theme-toggle" 
               onClick={() => setBildirimKutusuAcik(!bildirimKutusuAcik)}
-              style={{ position: 'relative', fontSize: '16px', cursor: 'pointer' }}
+              style={{ position: 'relative', padding: '7px 11px' }}
+              title="Görev Bildirimleri"
+              aria-label="Görev Bildirimleri"
             >
-              🔔
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
               {aktifGorevSayisi > 0 && (
                 <span style={{
-                  position: 'absolute', top: '-4px', right: '-4px', background: '#D32F2F', color: '#fff',
-                  borderRadius: '50%', width: '16px', height: '16px', fontSize: '10px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', lineHeight: 1
+                  position: 'absolute', top: '-3px', right: '-3px', background: 'var(--danger)', color: '#fff',
+                  borderRadius: 9999, padding: '1px 5px', fontSize: '10px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', lineHeight: 1.2
                 }}>
                   {aktifGorevSayisi}
                 </span>
@@ -146,20 +165,20 @@ export default function PersonelPanel() {
 
             {bildirimKutusuAcik && (
               <div style={{
-                position: 'absolute', top: '40px', right: '0', background: 'var(--card)',
-                border: '1px solid var(--border)', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                width: '290px', maxHeight: '350px', overflowY: 'auto', zIndex: 9999, padding: '12px'
+                position: 'absolute', top: '44px', right: '0', background: 'var(--card)',
+                border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
+                width: '300px', maxHeight: '360px', overflowY: 'auto', zIndex: 150, padding: '14px'
               }}>
                 <div style={{ 
-                  fontWeight: 'bold', borderBottom: '1px solid var(--border)', paddingBottom: '8px', 
-                  marginBottom: '8px', fontSize: '13px', display: 'flex', justifyContent: 'space-between', color: 'var(--ink)'
+                  fontWeight: 700, borderBottom: '1px solid var(--border)', paddingBottom: '8px', 
+                  marginBottom: '10px', fontSize: '13px', display: 'flex', justifyContent: 'space-between', color: 'var(--ink)'
                 }}>
                   <span>{t('sekmeGorevlerim')} ({aktifGorevSayisi})</span>
-                  <span style={{ cursor: 'pointer', color: 'var(--ink-soft)' }} onClick={() => setBildirimKutusuAcik(false)}>✕</span>
+                  <span style={{ cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 13 }} onClick={() => setBildirimKutusuAcik(false)}>✕</span>
                 </div>
                 
                 {bildirimler.length === 0 ? (
-                  <div style={{ padding: '15px 0', color: 'var(--ink-soft)', fontSize: '12px', textAlign: 'center' }}>
+                  <div style={{ padding: '16px 0', color: 'var(--ink-soft)', fontSize: '12px', textAlign: 'center' }}>
                     {t('sizeAtanmisGorevYok')}
                   </div>
                 ) : (
@@ -169,14 +188,14 @@ export default function PersonelPanel() {
                         key={b.id} 
                         onClick={() => { setTab('gorevler'); setBildirimKutusuAcik(false); }}
                         style={{ 
-                          padding: '8px', borderBottom: '1px solid var(--border)', cursor: 'pointer', 
+                          padding: '10px', borderBottom: '1px solid var(--border)', cursor: 'pointer', 
                           borderRadius: '6px', backgroundColor: 'var(--bg-soft)', textAlign: 'left'
                         }}
                       >
-                        <div style={{ fontWeight: '600', fontSize: '12px', color: 'var(--ink)' }}>{b.baslik}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--ink-soft)', marginTop: '2px' }}>📍 {b.lokasyon || t('lokasyon')}</div>
-                        <div style={{ fontSize: '10px', marginTop: '4px', fontWeight: 'bold', color: b.durum === 'Bekliyor' ? '#E8590C' : '#2B5876' }}>
-                          ➔ {b.durum}
+                        <div style={{ fontWeight: '600', fontSize: '12.5px', color: 'var(--ink)' }}>{b.baslik}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--ink-soft)', marginTop: '2px' }}>{b.lokasyon || t('lokasyon')}</div>
+                        <div style={{ fontSize: '10.5px', marginTop: '4px', fontWeight: 600, color: b.durum === 'Bekliyor' ? '#E8590C' : 'var(--accent-patron)' }}>
+                          Durum: {b.durum}
                         </div>
                       </div>
                     ))}
@@ -186,7 +205,6 @@ export default function PersonelPanel() {
             )}
           </div>
 
-          <button className="theme-toggle" onClick={() => setTema(temaDegistir(tema))}>{tema === 'dark' ? '☀️' : '🌙'}</button>
           <button className="logout" onClick={cikisYapOturum}>{t('cikis')}</button>
         </div>
       </div>
@@ -201,23 +219,26 @@ export default function PersonelPanel() {
         >
           {t('sekmeGorevlerim')}
           {aktifGorevSayisi > 0 && (
-            <span style={{ background: '#D32F2F', color: '#fff', borderRadius: '10px', padding: '2px 7px', fontSize: '11px', fontWeight: 'bold', lineHeight: 1 }}>
+            <span style={{ background: 'var(--danger)', color: '#fff', borderRadius: '10px', padding: '1px 6px', fontSize: '10px', fontWeight: 'bold', lineHeight: 1 }}>
               {aktifGorevSayisi}
             </span>
           )}
         </button>
         <button className={tab === 'arac' ? 'active-personel' : ''} onClick={() => setTab('arac')}>{t('sekmeArac')}</button>
-        <button className={tab === 'izin' ? 'active-personel' : ''} onClick={() => setTab('izin')}>🏖️💵 İzin ve Avans Taleplerim</button>
-        <button className={tab === 'finans' ? 'active-personel' : ''} onClick={() => setTab('finans')}>💰 Hakediş & Avansım</button>
+        <button className={tab === 'ekipman' ? 'active-personel' : ''} onClick={() => setTab('ekipman')}>🧰 Ekipmanlarım</button>
+        <button className={tab === 'projeler' ? 'active-personel' : ''} onClick={() => setTab('projeler')}>📐 Projeler & Planlar</button>
+        <button className={tab === 'izin' ? 'active-personel' : ''} onClick={() => setTab('izin')}>İzin & Avans Taleplerim</button>
+        <button className={tab === 'finans' ? 'active-personel' : ''} onClick={() => setTab('finans')}>Hakediş & Bakiye</button>
         {oturum.rol === 'formen' && (
           <button className={tab === 'veri' ? 'active-personel' : ''} onClick={() => setTab('veri')}>{t('sekmeSahaVerisi')}</button>
         )}
         {oturum.rol === 'formen' && (
-          <button className={tab === 'defter' ? 'active-personel' : ''} onClick={() => setTab('defter')}>📋 Günlük Faaliyet Raporu</button>
+          <button className={tab === 'defter' ? 'active-personel' : ''} onClick={() => setTab('defter')}>Günlük Faaliyet Raporu</button>
         )}
       </div>
 
       <div className="content">
+
         {tab === 'mesai' && (
           <MesaiTab
             oturum={oturum}
@@ -229,6 +250,8 @@ export default function PersonelPanel() {
         {tab === 'saatler' && <SaatlerimTab oturum={oturum} />}
         {tab === 'gorevler' && <GorevlerimTab oturum={oturum} onGorevDurumDegisti={bildirimleriYukle} />}
         {tab === 'arac' && <AracTab oturum={oturum} />}
+        {tab === 'ekipman' && <EkipmanTab oturum={oturum} />}
+        {tab === 'projeler' && <ProjelerModulu rol={oturum.rol} oturum={oturum} />}
         {tab === 'izin' && <PersonelIzinTab oturum={oturum} />}
         {tab === 'finans' && <PersonelFinansTab oturum={oturum} />}
         {tab === 'veri' && oturum.rol === 'formen' && <VeriTab oturum={oturum} aktifLokasyon={aktifLokasyon} />}
@@ -280,9 +303,26 @@ function MesaiTab({ oturum, saat, tarihMetni, lokasyonAyarlandi }) {
       .limit(1)
       .maybeSingle();
 
-    const acikMi = !!(data && data.durum === 'Açık');
+    let acikMi = !!(data && data.durum === 'Açık');
+    if (acikMi && data) {
+      const bugunStr = new Date().toISOString().slice(0, 10);
+      const girisGunStr = new Date(data.giris_saati).toISOString().slice(0, 10);
+      if (girisGunStr < bugunStr) {
+        // Dünden veya önceki günlerden açık kalan mesai -> Otomatik 11 saat (18:00 çıkış) ile kapat
+        const otoCikis = new Date(girisGunStr + 'T18:00:00Z');
+        await supabase.from('giris_cikis').update({
+          cikis_saati: otoCikis.toISOString(),
+          sure_saat: 11,
+          durum: 'Kapalı'
+        }).eq('id', data.id);
+        acikMi = false;
+        data.durum = 'Kapalı';
+        data.sure_saat = 11;
+      }
+    }
+
     setAcikKayit(acikMi ? data : null);
-    lokasyonAyarlandi(data ? data.lokasyon : null);
+    lokasyonAyarlandi(acikMi && data ? data.lokasyon : null);
     setYukleniyor(false);
     konumSifirla();
   }
@@ -293,6 +333,7 @@ function MesaiTab({ oturum, saat, tarihMetni, lokasyonAyarlandi }) {
     setKonumDurum('bekliyor'); setKonumMesaj('');
     setQrDurum('bekliyor'); setQrMesaj('');
   }
+  // seciliLokasyon degisiminde qrDurum resetlenmez
 
   const hedefLokasyon = acikKayit
     ? lokasyonlar.find((l) => l.ad === acikKayit.lokasyon)
@@ -355,10 +396,12 @@ function MesaiTab({ oturum, saat, tarihMetni, lokasyonAyarlandi }) {
     }
   }
 
-  const dogrulamaGerekli = ayarlar.konum_dogrulama_aktif || ayarlar.qr_dogrulama_aktif;
-  const dogrulamaTamam =
+  const isFormen = oturum.rol === 'formen';
+  const dogrulamaGerekli = !isFormen && (ayarlar.konum_dogrulama_aktif || ayarlar.qr_dogrulama_aktif);
+  const dogrulamaTamam = isFormen || (
     (!ayarlar.konum_dogrulama_aktif || konumDurum === 'basarili') &&
-    (!ayarlar.qr_dogrulama_aktif || qrDurum === 'basarili');
+    (!ayarlar.qr_dogrulama_aktif || qrDurum === 'basarili')
+  );
 
   async function girisYap() {
     setMesaj(null);
@@ -409,6 +452,12 @@ function MesaiTab({ oturum, saat, tarihMetni, lokasyonAyarlandi }) {
       <div className="card">
         <h2 className="section">{t('sekmeMesai')}</h2>
 
+        {isFormen && (
+          <div style={{ background: 'var(--accent-personel-soft)', border: '1px solid var(--accent-personel)', color: 'var(--accent-personel)', padding: '10px 14px', borderRadius: 8, fontSize: 12.5, fontWeight: 600, marginBottom: 14 }}>
+            ⭐ <b>Başformen Yetkisi:</b> Tüm şantiyelerden sorumlu olduğunuz için QR okutma zorunluluğunuz bulunmamaktadır. Şantiyenizi seçerek doğrudan işlem yapabilirsiniz.
+          </div>
+        )}
+
         {icerde ? (
           <div className="loc-badge">
             <div>
@@ -419,7 +468,7 @@ function MesaiTab({ oturum, saat, tarihMetni, lokasyonAyarlandi }) {
               </div>
             </div>
           </div>
-        ) : ayarlar.qr_dogrulama_aktif ? (
+        ) : (!isFormen && ayarlar.qr_dogrulama_aktif) ? (
           <div className="loc-badge">
             <div>
               <div className="label">{seciliLokasyon ? t('lokasyon') : 'Giriş İçin Şantiye QR Kodunu Okutun'}</div>
@@ -683,130 +732,6 @@ function GorevlerimTab({ oturum, onGorevDurumDegisti }) {
   );
 }
 
-/* ---------------- ARAÇ TAB ---------------- */
-function AracTab({ oturum }) {
-  const { t } = useLocale();
-  const [acikKayit, setAcikKayit] = useState(null);
-  const [bostaAraclar, setBostaAraclar] = useState([]);
-  const [tumAraclar, setTumAraclar] = useState([]);
-  const [gecmis, setGecmis] = useState([]);
-  const [plaka, setPlaka] = useState('');
-  const [alisKm, setAlisKm] = useState('');
-  const [teslimKm, setTeslimKm] = useState('');
-  const [mesaj, setMesaj] = useState(null);
-  const [yukleniyor, setYukleniyor] = useState(true);
-
-  async function veriYukle() {
-    setYukleniyor(true);
-    const { data: acik } = await supabase.from('arac_kullanim').select('*').eq('personel_no', oturum.personel_no).eq('durum', 'Açık').maybeSingle();
-    setAcikKayit(acik || null);
-
-    if (!acik) {
-      const { data: bosta } = await supabase.from('araclar').select('*').eq('durum', 'Boşta');
-      setBostaAraclar(bosta || []);
-      if (bosta && bosta.length) {
-        setPlaka(bosta[0].plaka);
-        setAlisKm(bosta[0].son_km != null ? String(bosta[0].son_km) : '');
-      }
-    }
-    const { data: hepsi } = await supabase.from('araclar').select('*');
-    setTumAraclar(hepsi || []);
-
-    const { data: gecmisVeri } = await supabase.from('arac_kullanim').select('*').eq('personel_no', oturum.personel_no).eq('durum', 'Kapalı').order('tarih', { ascending: false }).limit(10);
-    setGecmis(gecmisVeri || []);
-    setYukleniyor(false);
-  }
-
-  useEffect(() => { veriYukle(); }, []);
-
-  function plakaDegisti(yeniPlaka) {
-    setPlaka(yeniPlaka);
-    const arac = bostaAraclar.find((a) => a.plaka === yeniPlaka);
-    setAlisKm(arac && arac.son_km != null ? String(arac.son_km) : '');
-  }
-
-  async function teslimAl() {
-    setMesaj(null);
-    if (!plaka || alisKm === '') { setMesaj({ tip: 'err', metin: 'Plaka ve alış kilometresi gerekli.' }); return; }
-    const { error: e1 } = await supabase.from('arac_kullanim').insert({
-      personel_no: oturum.personel_no, ad: oturum.ad, plaka, alis_km: Number(alisKm), durum: 'Açık',
-    });
-    if (e1) { setMesaj({ tip: 'err', metin: e1.message }); return; }
-    await supabase.from('araclar').update({ durum: 'Kullanımda' }).eq('plaka', plaka);
-    setMesaj({ tip: 'ok', metin: plaka + ' teslim alındı.' });
-    setAlisKm('');
-    veriYukle();
-  }
-
-  async function teslimEt() {
-    setMesaj(null);
-    const t = Number(teslimKm);
-    if (!t || t < acikKayit.alis_km) { setMesaj({ tip: 'err', metin: "Geçerli teslim km girin." }); return; }
-    const katedilen = t - acikKayit.alis_km;
-    const { error: e1 } = await supabase.from('arac_kullanim').update({ teslim_km: t, katedilen_km: katedilen, durum: 'Kapalı', teslim_saati: new Date().toISOString() }).eq('id', acikKayit.id);
-    if (e1) { setMesaj({ tip: 'err', metin: e1.message }); return; }
-    await supabase.from('araclar').update({ durum: 'Boşta', son_km: t }).eq('plaka', acikKayit.plaka);
-    setMesaj({ tip: 'ok', metin: 'Araç teslim edildi. Kat edilen: ' + katedilen + ' km' });
-    setTeslimKm('');
-    veriYukle();
-  }
-
-  if (yukleniyor) return <div className="loading-text">Yükleniyor...</div>;
-
-  return (
-    <>
-      <div className="card">
-        <h2 className="section">{t('aracFilosu')}</h2>
-        <div className="grid cols-3" style={{ marginTop: 10 }}>
-          {tumAraclar.map((a) => {
-            const secilebilir = !acikKayit && a.durum === 'Boşta';
-            const secili = secilebilir && plaka === a.plaka;
-            return (
-              <div key={a.plaka} onClick={secilebilir ? () => plakaDegisti(a.plaka) : undefined} style={{ padding: 12, cursor: secilebilir ? 'pointer' : 'default', opacity: secilebilir || acikKayit ? 1 : 0.55, border: secili ? '2px solid var(--accent-personel)' : '1px solid var(--border)', borderRadius: 8 }}>
-                <div style={{ width: '100%', height: 90, borderRadius: 8, background: 'rgba(127, 127, 127, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 8 }}>
-                  {a.resim_url ? <img src={a.resim_url} alt={a.plaka} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 28 }}>🚐</span>}
-                </div>
-                <div style={{ fontWeight: 700, fontSize: 13 }}>{[a.marka, a.model].filter(Boolean).join(' ')}</div>
-                <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{a.plaka}</div>
-                <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span className={'status-tag' + (a.durum === 'Boşta' ? ' open' : '')}>{a.durum}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {acikKayit ? (
-        <div className="card">
-          <h2 className="section">{t('aracTeslimEt')}</h2>
-          <div className="loc-badge">
-            <div><div className="label">Kullanımdaki araç</div><div className="value">{acikKayit.plaka}</div></div>
-            <div><div className="label">Alış km</div><div className="value">{acikKayit.alis_km.toLocaleString('tr-TR')}</div></div>
-          </div>
-          <label style={{ marginTop: 12 }}>Teslim kilometresi</label>
-          <input type="number" value={teslimKm} onChange={(e) => setTeslimKm(e.target.value)} placeholder="örn. 84350" />
-          <button className="action btn-punch cikis" onClick={teslimEt}>Aracı Teslim Et</button>
-          {mesaj && <div className={'feedback ' + mesaj.tip}>{mesaj.metin}</div>}
-        </div>
-      ) : (
-        <div className="card">
-          <h2 className="section">{t('aracTeslimAl')}</h2>
-          <label>Plaka seç</label>
-          <select value={plaka} onChange={(e) => plakaDegisti(e.target.value)}>
-            {bostaAraclar.length === 0 && <option value="">Boşta araç yok</option>}
-            {bostaAraclar.map((a) => <option key={a.plaka} value={a.plaka}>{a.plaka}</option>)}
-          </select>
-          <label>Alış kilometresi</label>
-          <input type="number" value={alisKm} readOnly disabled style={{ background: 'rgba(127, 127, 127, 0.12)' }} />
-          <button className="action btn-punch" onClick={teslimAl} disabled={!bostaAraclar.length}>Aracı Teslim Al</button>
-          {mesaj && <div className={'feedback ' + mesaj.tip}>{mesaj.metin}</div>}
-        </div>
-      )}
-    </>
-  );
-}
-
 /* ---------------- SAHA VERİSİ TAB (USTABAŞI) ---------------- */
 function VeriTab({ oturum, aktifLokasyon }) {
   const { t } = useLocale();
@@ -953,22 +878,73 @@ function VeriTab({ oturum, aktifLokasyon }) {
   );
 }
 
-/* ---------------- ŞANTİYE DEFTERİ (sadece Formen) ---------------- */
+/* ---------------- ŞANTİYE DEFTERİ (Formen Günlük Faaliyet Raporu) ---------------- */
+function parseRapor(r) {
+  if (!r) return null;
+  let parsedMeta = {};
+  if (r.notlar && typeof r.notlar === 'string' && r.notlar.startsWith('{') && r.notlar.endsWith('}')) {
+    try {
+      parsedMeta = JSON.parse(r.notlar);
+    } catch (e) {}
+  }
+  return {
+    ...r,
+    tarih: r.tarih || parsedMeta.tarih || (r.created_at ? new Date(r.created_at).toISOString().split('T')[0] : ''),
+    saat: r.saat || parsedMeta.saat || (r.created_at ? new Date(r.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : ''),
+    hava_durumu: r.hava_durumu || parsedMeta.hava_durumu || 'Güneşli',
+    sicaklik: r.sicaklik || parsedMeta.sicaklik || '-',
+    patron_notu: r.patron_notu || parsedMeta.patron_notu || '',
+    patron_yarin_notu: r.patron_yarin_notu || parsedMeta.patron_notu || '',
+    patron_onay: r.patron_onay || parsedMeta.patron_onay || r.durum || 'Yeni',
+    notlar: parsedMeta.notMetni !== undefined ? parsedMeta.notMetni : r.notlar,
+    _rawMeta: parsedMeta,
+  };
+}
+
 function SantiyeDefteriTab({ oturum }) {
   const { t } = useLocale();
+  const [aktifSekme, setAktifSekme] = useState('yeni'); // 'yeni' | 'gecmis'
   const [lokasyonlar, setLokasyonlar] = useState([]);
   const [lokasyon, setLokasyon] = useState('');
-  const [formenSayisi, setFormenSayisi] = useState('');
-  const [ustaSayisi, setUstaSayisi] = useState('');
-  const [isciSayisi, setIsciSayisi] = useState('');
-  const [ofisSayisi, setOfisSayisi] = useState('');
-  const [araclar, setAraclar] = useState([{ cins: '', adet: '' }]);
+  const [tarih, setTarih] = useState(new Date().toISOString().split('T')[0]);
+  const [saat, setSaat] = useState(new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }));
+  
+  // 1. Hava & Saha Koşulları
+  const [havaDurumu, setHavaDurumu] = useState('Güneşli');
+  const [sicaklik, setSicaklik] = useState('22°C');
+  const [sahaDurumu, setSahaDurumu] = useState('Normal Çalışma');
+
+  // 2. İş Gücü (Sadece Formen ve Usta)
+  const [formenSayisi, setFormenSayisi] = useState('1');
+  const [ustaSayisi, setUstaSayisi] = useState('0');
+  const [qrPersoneller, setQrPersoneller] = useState([]);
+  const [qrYukleniyor, setQrYukleniyor] = useState(false);
+
+  // 3. Makine / Ekipman Durumu
+  const [araclar, setAraclar] = useState([
+    { cins: '', adet: '1', durum: 'Çalıştı', calismaSaati: '8', not: '' }
+  ]);
+
+  // 4. Günlük Kullanılan Malzemeler ve Satın Alımlar
+  const [gelenMalzemeler, setGelenMalzemeler] = useState([
+    { malzeme: '', miktar: '', tedarikciIrsaliye: '', durum: 'Satın Alındı' }
+  ]);
+
+  // 5. Yapılan İmalatlar & 6. Yarınki Plan
   const [bugunYapilan, setBugunYapilan] = useState('');
   const [yarinYapilacak, setYarinYapilacak] = useState('');
+
+  // 7. Genel Notlar
   const [notlar, setNotlar] = useState('');
+
+  // Durumlar
   const [kaydediliyor, setKaydediliyor] = useState(false);
   const [mesaj, setMesaj] = useState(null);
   const [gecmisRaporlar, setGecmisRaporlar] = useState([]);
+  const [seciliGecmisRapor, setSeciliGecmisRapor] = useState(null);
+
+  // Canlı Toplam İş Gücü Hesabı (Formen + Usta)
+  const genelToplamPersonel = (Number(formenSayisi) || 0) + (Number(ustaSayisi) || 0);
 
   function raporlariYukle() {
     supabase
@@ -976,249 +952,690 @@ function SantiyeDefteriTab({ oturum }) {
       .select('*')
       .eq('formen_no', oturum.personel_no)
       .order('created_at', { ascending: false })
-      .limit(10)
-      .then(({ data }) => setGecmisRaporlar(data || []));
+      .limit(30)
+      .then(({ data }) => {
+        const duzenlenmis = (data || []).map(parseRapor);
+        setGecmisRaporlar(duzenlenmis);
+      });
   }
 
+  // Tarih veya Lokasyon değiştiğinde QR okutan personelleri otomatik getir
+  const qrOkutanlariGetir = useCallback(async (hedefLokasyon, hedefTarih) => {
+    if (!hedefLokasyon || !hedefTarih) return;
+    setQrYukleniyor(true);
+    try {
+      const baslangic = `${hedefTarih}T00:00:00`;
+      const bitis = `${hedefTarih}T23:59:59.999`;
+
+      const [{ data: kayitlar }, { data: personelListesi }] = await Promise.all([
+        supabase
+          .from('giris_cikis')
+          .select('*')
+          .eq('lokasyon', hedefLokasyon)
+          .gte('giris_saati', baslangic)
+          .lte('giris_saati', bitis)
+          .order('giris_saati', { ascending: true }),
+        supabase
+          .from('personel')
+          .select('personel_no, ad, rol')
+      ]);
+
+      const rolMap = {};
+      (personelListesi || []).forEach((p) => {
+        rolMap[p.personel_no] = p.rol || 'personel';
+      });
+
+      // Tekil personelleri listele
+      const tekilPersoneller = [];
+      const gorulen = new Set();
+
+      (kayitlar || []).forEach((k) => {
+        if (!gorulen.has(k.personel_no)) {
+          gorulen.add(k.personel_no);
+          tekilPersoneller.push({
+            personel_no: k.personel_no,
+            ad: k.ad,
+            rol: rolMap[k.personel_no] || 'personel',
+            giris_saati: k.giris_saati,
+            durum: k.durum
+          });
+        }
+      });
+
+      setQrPersoneller(tekilPersoneller);
+
+      // Formen ve Usta/İşçi sayılarını otomatik hesapla
+      let fSayisi = tekilPersoneller.filter((p) => p.rol === 'formen').length;
+      let uSayisi = tekilPersoneller.filter((p) => p.rol !== 'formen' && p.rol !== 'patron').length;
+
+      // Eğer formen kendisi dolduruyorsa ve QR henüz okutmamışsa dahi en az 1 formen olsun
+      if (fSayisi === 0 && oturum?.rol === 'formen') {
+        fSayisi = 1;
+      }
+
+      setFormenSayisi(String(fSayisi));
+      setUstaSayisi(String(uSayisi));
+    } catch (e) {
+      console.warn('QR personelleri getirilirken hata:', e);
+    } finally {
+      setQrYukleniyor(false);
+    }
+  }, [oturum]);
+
   useEffect(() => {
-    supabase.from('lokasyonlar').select('*').then(({ data }) => setLokasyonlar(data || []));
+    supabase.from('lokasyonlar').select('*').then(({ data }) => {
+      setLokasyonlar(data || []);
+      if (data && data.length > 0 && !lokasyon) {
+        setLokasyon(data[0].ad);
+      }
+    });
     raporlariYukle();
   }, []);
 
-  function aracSatiriDegistir(i, alan, deger) {
+  useEffect(() => {
+    if (lokasyon && tarih) {
+      qrOkutanlariGetir(lokasyon, tarih);
+    }
+  }, [lokasyon, tarih, qrOkutanlariGetir]);
+
+  // Ekipman işlemleri
+  function aracDegistir(i, alan, deger) {
     setAraclar((onceki) => onceki.map((a, idx) => (idx === i ? { ...a, [alan]: deger } : a)));
   }
-  function aracSatiriEkle() {
-    setAraclar((onceki) => [...onceki, { cins: '', adet: '' }]);
+  function aracEkle() {
+    setAraclar((onceki) => [...onceki, { cins: '', adet: '1', durum: 'Çalıştı', calismaSaati: '8', not: '' }]);
   }
-  function aracSatiriSil(i) {
+  function aracSil(i) {
     setAraclar((onceki) => onceki.filter((_, idx) => idx !== i));
   }
 
+  // Malzeme işlemleri
+  function malzemeDegistir(i, alan, deger) {
+    setGelenMalzemeler((onceki) => onceki.map((m, idx) => (idx === i ? { ...m, [alan]: deger } : m)));
+  }
+  function malzemeEkle() {
+    setGelenMalzemeler((onceki) => [...onceki, { malzeme: '', miktar: '', tedarikciIrsaliye: '', durum: 'Satın Alındı' }]);
+  }
+  function malzemeSil(i) {
+    setGelenMalzemeler((onceki) => onceki.filter((_, idx) => idx !== i));
+  }
+
   function formuTemizle() {
-    setLokasyon(''); setFormenSayisi(''); setUstaSayisi(''); setIsciSayisi(''); setOfisSayisi('');
-    setAraclar([{ cins: '', adet: '' }]); setBugunYapilan(''); setYarinYapilacak(''); setNotlar('');
+    setSaat(new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }));
+    if (lokasyon && tarih) {
+      qrOkutanlariGetir(lokasyon, tarih);
+    } else {
+      setFormenSayisi('1'); 
+      setUstaSayisi('0');
+    }
+    setAraclar([{ cins: '', adet: '1', durum: 'Çalıştı', calismaSaati: '8', not: '' }]);
+    setGelenMalzemeler([{ malzeme: '', miktar: '', tedarikciIrsaliye: '', durum: 'Satın Alındı' }]);
+    setBugunYapilan(''); 
+    setYarinYapilacak(''); 
+    setNotlar('');
   }
 
   async function raporKaydet() {
     setMesaj(null);
-    if (!lokasyon.trim()) { setMesaj({ tip: 'err', metin: 'Lokasyon/şantiye adı gerekli.' }); return; }
-    if (!bugunYapilan.trim()) { setMesaj({ tip: 'err', metin: 'Bugün yapılan işleri girin.' }); return; }
+    if (!lokasyon.trim()) { setMesaj({ tip: 'err', metin: 'Lütfen şantiye/lokasyon seçin.' }); return; }
+    if (!bugunYapilan.trim()) { setMesaj({ tip: 'err', metin: 'Lütfen bugün yapılan iş ve imalatları girin.' }); return; }
 
     setKaydediliyor(true);
+    
+    // Temiz veriler
     const temizAraclar = araclar.filter((a) => a.cins.trim());
+    const temizMalzemeler = gelenMalzemeler.filter((m) => m.malzeme.trim());
 
-    const { error } = await supabase.from('santiye_defterleri').insert({
+    // Tüm ekstra bilgileri güvenli JSON zarfı içinde paketliyoruz (her DB şemasıyla %100 uyumlu)
+    const metaPaketi = {
+      notMetni: notlar.trim() || null,
+      tarih: tarih || new Date().toISOString().split('T')[0],
+      saat: saat || new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+      hava_durumu: havaDurumu,
+      sicaklik: sicaklik.trim(),
+      saha_durumu: sahaDurumu,
+      gelen_malzemeler: temizMalzemeler,
+      patron_onay: 'Yeni',
+      patron_notu: '',
+      patron_yarin_notu: '',
+    };
+
+    const veri = {
       lokasyon: lokasyon.trim(),
       formen_no: oturum.personel_no,
       formen_adi: oturum.ad,
       saha_formen_sayisi: Number(formenSayisi) || 0,
       saha_usta_sayisi: Number(ustaSayisi) || 0,
-      saha_isci_sayisi: Number(isciSayisi) || 0,
-      ofis_personel_sayisi: Number(ofisSayisi) || 0,
+      saha_isci_sayisi: 0,
+      ofis_personel_sayisi: 0,
       arac_ekipman: temizAraclar,
       bugun_yapilan: bugunYapilan.trim(),
       yarin_yapilacak: yarinYapilacak.trim() || null,
-      notlar: notlar.trim() || null,
+      notlar: JSON.stringify(metaPaketi),
       durum: 'Yeni',
-    });
+    };
+
+    const { error } = await supabase.from('santiye_defterleri').insert(veri);
+    
     setKaydediliyor(false);
 
-    if (error) { setMesaj({ tip: 'err', metin: error.message }); return; }
-    setMesaj({ tip: 'ok', metin: '✅ Rapor kaydedildi, patrona bildirim gönderildi.' });
+    if (error) { 
+      setMesaj({ tip: 'err', metin: 'Kayıt hatası: ' + error.message }); 
+      return; 
+    }
+    
+    setMesaj({ tip: 'ok', metin: 'Günlük faaliyet raporu kaydedildi ve patrona iletildi!' });
     formuTemizle();
     raporlariYukle();
+    setTimeout(() => {
+      setAktifSekme('gecmis');
+      setMesaj(null);
+    }, 1500);
   }
 
+  const havaSecenekleri = [
+    { label: '☀️ Güneşli', val: 'Güneşli' },
+    { label: '⛅ Parçalı Bulutlu', val: 'Parçalı Bulutlu' },
+    { label: '☁️ Bulutlu', val: 'Bulutlu' },
+    { label: '🌧️ Yağmurlu', val: 'Yağmurlu' },
+    { label: '❄️ Karlı', val: 'Karlı' },
+    { label: '💨 Rüzgarlı', val: 'Rüzgarlı' },
+    { label: '🧊 Don / Aşırı Soğuk', val: 'Don' },
+  ];
+
+  const sahaDurumuSecenekleri = [
+    { label: 'Normal Çalışma', val: 'Normal Çalışma' },
+    { label: 'Kısmi Duruş (Hava/Teknik)', val: 'Kısmi Duruş' },
+    { label: 'Tam Duruş / Tatil', val: 'Tam Duruş' },
+  ];
+
   return (
-    <div className="card">
-      <h2 className="section">📋 Günlük Faaliyet Raporu</h2>
-      <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 10 }}>
-        Bugün gezdiğiniz her şantiye için ayrı bir rapor doldurabilirsiniz.
+    <div className="card" style={{ maxWidth: 900, margin: '0 auto' }}>
+      {/* Üst Sekmeler */}
+      <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid var(--border)', paddingBottom: 12, marginBottom: 16 }}>
+        <button
+          type="button"
+          onClick={() => { setAktifSekme('yeni'); setSeciliGecmisRapor(null); }}
+          className={'action ' + (aktifSekme === 'yeni' ? 'btn-ai' : 'btn-secondary')}
+          style={{ flex: 1, padding: '10px 14px', fontSize: 13, fontWeight: 700 }}
+        >
+          Yeni Günlük Rapor Doldur
+        </button>
+        <button
+          type="button"
+          onClick={() => setAktifSekme('gecmis')}
+          className={'action ' + (aktifSekme === 'gecmis' ? 'btn-ai' : 'btn-secondary')}
+          style={{ flex: 1, padding: '10px 14px', fontSize: 13, fontWeight: 700 }}
+        >
+          Gönderdiğim Raporlar ({gecmisRaporlar.length})
+        </button>
       </div>
 
-      <label>Lokasyon / Şantiye</label>
-      <div className="chip-row">
-        {lokasyonlar.map((l) => (
-          <span key={l.ad} className={'chip' + (lokasyon === l.ad ? ' sel' : '')} onClick={() => setLokasyon(l.ad)}>{l.ad}</span>
-        ))}
-      </div>
-      <input style={{ marginTop: 8 }} placeholder="veya farklı bir şantiye adı yazın" value={lokasyon} onChange={(e) => setLokasyon(e.target.value)} />
-
-      <label style={{ marginTop: 16 }}>Saha personel sayıları</label>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+      {aktifSekme === 'gecmis' ? (
         <div>
-          <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginBottom: 4 }}>Formen</div>
-          <input type="number" value={formenSayisi} onChange={(e) => setFormenSayisi(e.target.value)} placeholder="0" />
-        </div>
-        <div>
-          <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginBottom: 4 }}>Usta</div>
-          <input type="number" value={ustaSayisi} onChange={(e) => setUstaSayisi(e.target.value)} placeholder="0" />
-        </div>
-        <div>
-          <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginBottom: 4 }}>Düz İşçi</div>
-          <input type="number" value={isciSayisi} onChange={(e) => setIsciSayisi(e.target.value)} placeholder="0" />
-        </div>
-      </div>
-
-      <label>Ofis / idari personel sayısı</label>
-      <input type="number" value={ofisSayisi} onChange={(e) => setOfisSayisi(e.target.value)} placeholder="0" />
-
-      <label style={{ marginTop: 16 }}>Makina, Ekipman ve Araç Durumu</label>
-      <div style={{ display: 'grid', gap: 6 }}>
-        {araclar.map((a, i) => (
-          <div key={i} style={{ display: 'flex', gap: 6 }}>
-            <input placeholder="Cinsi (örn. Vinç)" value={a.cins} onChange={(e) => aracSatiriDegistir(i, 'cins', e.target.value)} style={{ flex: 2 }} />
-            <input placeholder="Adet" type="number" value={a.adet} onChange={(e) => aracSatiriDegistir(i, 'adet', e.target.value)} style={{ flex: 1 }} />
-            {araclar.length > 1 && (
-              <button
-                type="button"
-                onClick={() => aracSatiriSil(i)}
-                style={{ border: 'none', background: 'rgba(220, 38, 38, 0.14)', color: '#ef4444', borderRadius: 7, padding: '0 12px', fontWeight: 700, cursor: 'pointer' }}
+          <h2 className="section">Geçmiş Günlük Faaliyet Raporlarım</h2>
+          {seciliGecmisRapor ? (
+            <div style={{ background: 'var(--bg-soft)', borderRadius: 10, padding: 14, marginTop: 12 }}>
+              <button 
+                type="button" 
+                className="action btn-secondary" 
+                style={{ width: 'auto', marginBottom: 12, fontSize: 12 }} 
+                onClick={() => setSeciliGecmisRapor(null)}
               >
-                ✕
+                ← Rapor Listesine Dön
               </button>
-            )}
-          </div>
-        ))}
-      </div>
-      <button type="button" className="action btn-secondary" style={{ marginTop: 8 }} onClick={aracSatiriEkle}>+ Satır Ekle</button>
-
-      <label style={{ marginTop: 16 }}>Bugün Yapılan İşler</label>
-      <textarea rows={4} value={bugunYapilan} onChange={(e) => setBugunYapilan(e.target.value)} placeholder={'Her satıra bir madde yazın, örn:\n- Zemin betonu döküldü\n- Duvar örümüne başlandı'} style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontFamily: 'inherit', fontSize: 14 }} />
-
-      <label style={{ marginTop: 12 }}>Yarın Yapılacak İşler</label>
-      <textarea rows={3} value={yarinYapilacak} onChange={(e) => setYarinYapilacak(e.target.value)} placeholder="opsiyonel" style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontFamily: 'inherit', fontSize: 14 }} />
-
-      <label style={{ marginTop: 12 }}>Notlar / Açıklamalar / Sıkıntılar</label>
-      <textarea rows={3} value={notlar} onChange={(e) => setNotlar(e.target.value)} placeholder="opsiyonel" style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontFamily: 'inherit', fontSize: 14 }} />
-
-      <button className="action btn-ai" style={{ marginTop: 16 }} onClick={raporKaydet} disabled={kaydediliyor}>
-        {kaydediliyor ? 'Kaydediliyor...' : '📋 Raporu Kaydet ve Patrona Gönder'}
-      </button>
-      {mesaj && <div className={'feedback ' + mesaj.tip}>{mesaj.metin}</div>}
-
-      {gecmisRaporlar.length > 0 && (
-        <div style={{ marginTop: 24, borderTop: '1px solid var(--border)', paddingTop: 14 }}>
-          <h3 style={{ fontSize: 14, margin: '0 0 10px' }}>Son gönderdiğim raporlar</h3>
-          <div style={{ display: 'grid', gap: 8 }}>
-            {gecmisRaporlar.map((r) => (
-              <div key={r.id} style={{ border: '1px solid var(--border)', borderRadius: 9, padding: '8px 12px', fontSize: 13 }}>
-                <b>{r.lokasyon}</b> · {new Date(r.created_at).toLocaleString('tr-TR')}{' '}
-                <span className={'status-tag' + (r.durum === 'Görüldü' ? ' open' : '')}>{r.durum}</span>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                <div>
+                  <h3 style={{ fontSize: 16, margin: 0, color: 'var(--ink)' }}>{seciliGecmisRapor.lokasyon}</h3>
+                  <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 2 }}>
+                    Tarih: <b>{seciliGecmisRapor.tarih || new Date(seciliGecmisRapor.created_at).toLocaleDateString('tr-TR')}</b> | Saat: <b>{seciliGecmisRapor.saat || new Date(seciliGecmisRapor.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</b>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <span className={'status-tag ' + (seciliGecmisRapor.patron_onay === 'Onaylandı' ? 'open' : seciliGecmisRapor.patron_onay === 'Revize İstendi' ? 'closed' : '')}>
+                    {seciliGecmisRapor.patron_onay || seciliGecmisRapor.durum}
+                  </span>
+                </div>
               </div>
-            ))}
+
+              {/* PATRON GENEL GERİ BİLDİRİMİ */}
+              {seciliGecmisRapor.patron_notu && (
+                <div style={{ marginTop: 12, padding: 12, background: 'var(--warning-soft)', borderLeft: '3px solid var(--warning)', borderRadius: 8, fontSize: 13 }}>
+                  <b style={{ color: 'var(--warning)', fontSize: 13 }}>Patron Genel Notu:</b>
+                  <div style={{ marginTop: 4, fontWeight: 600, color: 'var(--ink)' }}>{seciliGecmisRapor.patron_notu}</div>
+                </div>
+              )}
+
+              {/* PATRON YARINKİ İŞLER GERİ BİLDİRİMİ */}
+              {seciliGecmisRapor.patron_yarin_notu && (
+                <div style={{ marginTop: 10, padding: 12, background: 'var(--accent-patron-soft)', borderLeft: '3px solid var(--accent-patron)', borderRadius: 8, fontSize: 13 }}>
+                  <b style={{ color: 'var(--accent-patron)', fontSize: 13 }}>Patronun Yarınki İşler Talimatı / Yorumu:</b>
+                  <div style={{ marginTop: 4, fontWeight: 600, color: 'var(--ink)' }}>{seciliGecmisRapor.patron_yarin_notu}</div>
+                </div>
+              )}
+
+              {/* Özet Bilgiler */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10, marginTop: 14 }}>
+                <div style={{ background: 'var(--card)', padding: 10, borderRadius: 8, border: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>Hava & Saha Durumu</div>
+                  <div style={{ fontWeight: 700, fontSize: 13, marginTop: 2 }}>{seciliGecmisRapor.hava_durumu || 'Güneşli'} · {seciliGecmisRapor.sicaklik || '-'}</div>
+                  <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 2 }}>{seciliGecmisRapor.saha_durumu || 'Normal'}</div>
+                </div>
+                <div style={{ background: 'var(--card)', padding: 10, borderRadius: 8, border: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>İş Gücü Mevcudu</div>
+                  <div style={{ fontWeight: 700, fontSize: 13, marginTop: 2 }}>
+                    {(seciliGecmisRapor.saha_formen_sayisi || 0) + (seciliGecmisRapor.saha_usta_sayisi || 0)} Kişi Sahada
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 2 }}>
+                    {seciliGecmisRapor.saha_formen_sayisi || 0} Formen, {seciliGecmisRapor.saha_usta_sayisi || 0} Usta
+                  </div>
+                </div>
+              </div>
+
+              {/* Ekipmanlar */}
+              {seciliGecmisRapor.arac_ekipman && seciliGecmisRapor.arac_ekipman.length > 0 && (
+                <div style={{ marginTop: 14 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', marginBottom: 4 }}>Makine & Ekipmanlar</div>
+                  <div style={{ display: 'grid', gap: 4 }}>
+                    {seciliGecmisRapor.arac_ekipman.map((a, idx) => (
+                      <div key={idx} style={{ background: 'var(--card)', padding: '7px 10px', borderRadius: 6, fontSize: 12, border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between' }}>
+                        <span><b>{a.cins}</b> ({a.adet || 1} Adet) - {a.calismaSaati ? a.calismaSaati + ' Saat' : ''}</span>
+                        <span className={'status-tag ' + (a.durum === 'Çalıştı' ? 'open' : '')}>{a.durum}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Malzemeler ve Satın Alımlar */}
+              {seciliGecmisRapor.gelen_malzemeler && seciliGecmisRapor.gelen_malzemeler.length > 0 && (
+                <div style={{ marginTop: 14 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', marginBottom: 4 }}>Kullanılan Malzemeler & Satın Alımlar</div>
+                  <div style={{ display: 'grid', gap: 4 }}>
+                    {seciliGecmisRapor.gelen_malzemeler.map((m, idx) => (
+                      <div key={idx} style={{ background: 'var(--card)', padding: '7px 10px', borderRadius: 6, fontSize: 12, border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between' }}>
+                        <span><b>{m.malzeme}</b> — {m.miktar} <span style={{ color: 'var(--ink-soft)' }}>({m.tedarikciIrsaliye ? 'Alınan Yer: ' + m.tedarikciIrsaliye : ''})</span></span>
+                        <span className="status-tag open">{m.durum || 'Satın Alındı'}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Yapılan İşler */}
+              <div style={{ marginTop: 14 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', marginBottom: 4 }}>Bugün Yapılan İmalat ve İşler</div>
+                <div style={{ background: 'var(--card)', padding: 12, borderRadius: 8, border: '1px solid var(--border)', fontSize: 13, whiteSpace: 'pre-wrap', lineHeight: 1.55 }}>
+                  {seciliGecmisRapor.bugun_yapilan}
+                </div>
+              </div>
+
+              {/* Yarınki Plan */}
+              {seciliGecmisRapor.yarin_yapilacak && (
+                <div style={{ marginTop: 10 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', marginBottom: 4 }}>Yarın Planlanan İşler & Satın Alımlar</div>
+                  <div style={{ background: 'var(--card)', padding: 12, borderRadius: 8, border: '1px solid var(--border)', fontSize: 13, whiteSpace: 'pre-wrap', lineHeight: 1.55 }}>
+                    {seciliGecmisRapor.yarin_yapilacak}
+                  </div>
+                </div>
+              )}
+
+              {/* Genel Notlar */}
+              {seciliGecmisRapor.notlar && (
+                <div style={{ marginTop: 10 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', marginBottom: 4 }}>Genel Şantiye Notları</div>
+                  <div style={{ background: 'var(--card)', padding: 12, borderRadius: 8, border: '1px solid var(--border)', fontSize: 13, whiteSpace: 'pre-wrap', lineHeight: 1.55 }}>
+                    {seciliGecmisRapor.notlar}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
+              {gecmisRaporlar.map((r) => (
+                <div
+                  key={r.id}
+                  onClick={() => setSeciliGecmisRapor(r)}
+                  style={{ border: '1px solid var(--border)', borderRadius: 9, padding: '12px 16px', cursor: 'pointer', background: 'var(--card)', transition: 'all 0.15s' }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14 }}>{r.lokasyon}</div>
+                      <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 2 }}>
+                        Tarih: {r.tarih || new Date(r.created_at).toLocaleDateString('tr-TR')} · Saat: {r.saat || new Date(r.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} · {r.hava_durumu || 'Güneşli'}
+                      </div>
+                    </div>
+                    <span className={'status-tag ' + (r.patron_onay === 'Onaylandı' ? 'open' : r.patron_onay === 'Revize İstendi' ? 'closed' : '')}>
+                      {r.patron_onay || r.durum}
+                    </span>
+                  </div>
+                  {(r.patron_notu || r.patron_yarin_notu) && (
+                    <div style={{ marginTop: 6, fontSize: 11, color: 'var(--warning)', fontWeight: 600 }}>
+                      Patron Yorumu / Talimatı Var
+                    </div>
+                  )}
+                </div>
+              ))}
+              {gecmisRaporlar.length === 0 && (
+                <div style={{ color: 'var(--ink-soft)', fontSize: 13, textAlign: 'center', padding: 20 }}>
+                  Henüz gönderilmiş günlük faaliyet raporunuz bulunmuyor.
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h2 className="section" style={{ margin: 0 }}>Şantiye Günlük Faaliyet Raporu</h2>
+            <div style={{ fontSize: 12, background: 'var(--accent-personel-soft)', color: 'var(--accent-personel)', padding: '4px 8px', borderRadius: 6, fontWeight: 700 }}>
+              Formen: {oturum.ad}
+            </div>
           </div>
+
+          <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginBottom: 16 }}>
+            Şantiyede gün boyu gerçekleşen iş gücü, ekipman, malzeme/satın alım, imalat ve ilerleme bilgilerini doldurup patrona iletin.
+          </div>
+
+          {/* BÖLÜM 1: LOKASYON, TARİH, SAAT & HAVA KOŞULLARI */}
+          <div style={{ background: 'var(--bg-soft)', padding: 14, borderRadius: 10, marginBottom: 14, border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--accent-patron)', marginBottom: 8 }}>
+              1. Şantiye, Tarih, Saat & Hava Durumu
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 10 }}>
+              <div>
+                <label style={{ fontSize: 11, marginBottom: 4 }}>Rapor Tarihi</label>
+                <input type="date" value={tarih} onChange={(e) => setTarih(e.target.value)} />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, marginBottom: 4 }}>Doldurma / Başlama Saati</label>
+                <input type="text" placeholder="Örn: 17:30" value={saat} onChange={(e) => setSaat(e.target.value)} />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, marginBottom: 4 }}>Şantiye / Proje Seçimi</label>
+                <select value={lokasyon} onChange={(e) => setLokasyon(e.target.value)}>
+                  {lokasyonlar.map((l) => (
+                    <option key={l.ad} value={l.ad}>{l.ad}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 11, marginBottom: 4 }}>Sıcaklık (°C)</label>
+                <input placeholder="Örn: 22°C veya 18-24°C" value={sicaklik} onChange={(e) => setSicaklik(e.target.value)} />
+              </div>
+            </div>
+
+            <label style={{ fontSize: 11, marginBottom: 4 }}>Hava Koşulu</label>
+            <div className="chip-row" style={{ marginBottom: 10 }}>
+              {havaSecenekleri.map((h) => (
+                <span 
+                  key={h.val} 
+                  className={'chip' + (havaDurumu === h.val ? ' sel' : '')} 
+                  onClick={() => setHavaDurumu(h.val)}
+                >
+                  {h.label}
+                </span>
+              ))}
+            </div>
+
+            <label style={{ fontSize: 11, marginBottom: 4 }}>Saha Çalışma Durumu</label>
+            <div className="chip-row">
+              {sahaDurumuSecenekleri.map((s) => (
+                <span 
+                  key={s.val} 
+                  className={'chip' + (sahaDurumu === s.val ? ' sel' : '')} 
+                  onClick={() => setSahaDurumu(s.val)}
+                >
+                  {s.label}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* BÖLÜM 2: İŞ GÜCÜ (QR OKUTANLARDAN OTOMATİK TESPİT + FORMEN VE USTA) */}
+          <div style={{ background: 'var(--bg-soft)', padding: 14, borderRadius: 10, marginBottom: 14, border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--accent-patron)' }}>
+                2. İş Gücü & Personel Mevcudu
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => qrOkutanlariGetir(lokasyon, tarih)}
+                  className="action btn-secondary"
+                  style={{ margin: 0, padding: '3px 8px', fontSize: 11, fontWeight: 600 }}
+                  title="QR Girişlerini Yeniden Tara"
+                >
+                  {qrYukleniyor ? 'Taranıyor...' : '🔄 QR Girişlerini Tara'}
+                </button>
+                <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--success)', background: 'var(--success-soft)', padding: '2px 8px', borderRadius: 6 }}>
+                  Toplam Sahada: {genelToplamPersonel} Kişi
+                </div>
+              </div>
+            </div>
+
+            {/* QR Okutan Personellerin Otomatik Bilgilendirme Kutusu */}
+            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <span style={{ fontWeight: 700, color: 'var(--ink)' }}>
+                  {qrYukleniyor ? '🔍 QR girişleri kontrol ediliyor...' : qrPersoneller.length > 0 ? `✅ ${tarih} Tarihinde Bu Şantiyeye QR Okutanlar (${qrPersoneller.length} Kişi):` : `ℹ️ ${tarih} Tarihinde bu şantiyede QR okutan kayıt bulunamadı.`}
+                </span>
+                <span style={{ fontSize: 11, color: 'var(--ink-soft)' }}>
+                  (Sayılar otomatik aktarılmıştır, dilerseniz değiştirebilirsiniz)
+                </span>
+              </div>
+
+              {qrPersoneller.length > 0 ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                  {qrPersoneller.map((p, idx) => (
+                    <div 
+                      key={idx} 
+                      style={{ 
+                        background: 'var(--bg-soft)', 
+                        border: '1px solid var(--border)', 
+                        borderRadius: 6, 
+                        padding: '3px 8px', 
+                        fontSize: 11.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4
+                      }}
+                    >
+                      <b style={{ color: 'var(--ink)' }}>{p.ad}</b>
+                      <span style={{ color: p.rol === 'formen' ? 'var(--accent-patron)' : 'var(--ink-soft)', fontWeight: 600, fontSize: 10.5 }}>
+                        ({p.rol === 'formen' ? 'Formen' : 'Usta/İşçi'})
+                      </span>
+                      <span style={{ color: 'var(--ink-soft)', fontSize: 10 }}>
+                        · {new Date(p.giris_saati).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ color: 'var(--ink-soft)', fontSize: 11 }}>
+                  Sahada QR okutmayan personel varsa aşağıdaki kutulardan Formen ve Usta sayısını manuel olarak girebilirsiniz.
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', marginBottom: 4 }}>Formen Sayısı</div>
+                <input type="number" min="0" value={formenSayisi} onChange={(e) => setFormenSayisi(e.target.value)} placeholder="1" />
+              </div>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', marginBottom: 4 }}>Usta / İşçi Sayısı</div>
+                <input type="number" min="0" value={ustaSayisi} onChange={(e) => setUstaSayisi(e.target.value)} placeholder="0" />
+              </div>
+            </div>
+          </div>
+
+          {/* BÖLÜM 3: MAKİNE & EKİPMAN DURUMU */}
+          <div style={{ background: 'var(--bg-soft)', padding: 14, borderRadius: 10, marginBottom: 14, border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--accent-patron)', marginBottom: 8 }}>
+              3. Makine & Ekipman Kullanımı
+            </div>
+            <div style={{ display: 'grid', gap: 6 }}>
+              {araclar.map((a, i) => (
+                <div key={i} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <input 
+                    placeholder="Makine Cinsi (Örn: Kule Vinç, Beko Kepçe)" 
+                    value={a.cins} 
+                    onChange={(e) => aracDegistir(i, 'cins', e.target.value)} 
+                    style={{ flex: 2, minWidth: 150 }} 
+                  />
+                  <input 
+                    placeholder="Adet" 
+                    type="number" 
+                    value={a.adet} 
+                    onChange={(e) => aracDegistir(i, 'adet', e.target.value)} 
+                    style={{ width: 60 }} 
+                  />
+                  <select 
+                    value={a.durum} 
+                    onChange={(e) => aracDegistir(i, 'durum', e.target.value)}
+                    style={{ flex: 1, minWidth: 100 }}
+                  >
+                    <option value="Çalıştı">Çalıştı</option>
+                    <option value="Arızalı">Arızalı / Bakımda</option>
+                    <option value="Boşta">Boşta Bekledi</option>
+                  </select>
+                  <input 
+                    placeholder="Saat" 
+                    value={a.calismaSaati} 
+                    onChange={(e) => aracDegistir(i, 'calismaSaati', e.target.value)} 
+                    style={{ width: 60 }} 
+                  />
+                  {araclar.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => aracSil(i)}
+                      style={{ border: 'none', background: 'rgba(220, 38, 38, 0.14)', color: '#ef4444', borderRadius: 7, padding: '0 10px', fontWeight: 700, cursor: 'pointer', height: 38 }}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button type="button" className="action btn-secondary" style={{ marginTop: 6, width: 'auto', padding: '4px 10px', fontSize: 11 }} onClick={aracEkle}>
+              + Makine / Ekipman Ekle
+            </button>
+          </div>
+
+          {/* BÖLÜM 4: GÜNLÜK KULLANILAN MALZEMELER VE SATIN ALIMLAR */}
+          <div style={{ background: 'var(--bg-soft)', padding: 14, borderRadius: 10, marginBottom: 14, border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--accent-patron)', marginBottom: 8 }}>
+              4. Günlük Kullanılan Malzemeler ve Satın Alımlar
+            </div>
+            <div style={{ display: 'grid', gap: 6 }}>
+              {gelenMalzemeler.map((m, i) => (
+                <div key={i} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <input 
+                    placeholder="Malzeme Cinsi (Örn: Çimento, Alçı, Profil)" 
+                    value={m.malzeme} 
+                    onChange={(e) => malzemeDegistir(i, 'malzeme', e.target.value)} 
+                    style={{ flex: 2, minWidth: 150 }} 
+                  />
+                  <input 
+                    placeholder="Miktar (Örn: 5 Torba / 10 Adet)" 
+                    value={m.miktar} 
+                    onChange={(e) => malzemeDegistir(i, 'miktar', e.target.value)} 
+                    style={{ flex: 1, minWidth: 100 }} 
+                  />
+                  <input 
+                    placeholder="Nereden Alındığı (Örn: Castorama, OBI, Leroy Merlin)" 
+                    value={m.tedarikciIrsaliye} 
+                    onChange={(e) => malzemeDegistir(i, 'tedarikciIrsaliye', e.target.value)} 
+                    style={{ flex: 2, minWidth: 160 }} 
+                  />
+                  <select 
+                    value={m.durum} 
+                    onChange={(e) => malzemeDegistir(i, 'durum', e.target.value)}
+                    style={{ width: 120 }}
+                  >
+                    <option value="Satın Alındı">Satın Alındı</option>
+                    <option value="Kullanıldı">Kullanıldı</option>
+                    <option value="Depodan Geldi">Depodan Geldi</option>
+                  </select>
+                  {gelenMalzemeler.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => malzemeSil(i)}
+                      style={{ border: 'none', background: 'rgba(220, 38, 38, 0.14)', color: '#ef4444', borderRadius: 7, padding: '0 10px', fontWeight: 700, cursor: 'pointer', height: 38 }}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button type="button" className="action btn-secondary" style={{ marginTop: 6, width: 'auto', padding: '4px 10px', fontSize: 11 }} onClick={malzemeEkle}>
+              + Malzeme / Satın Alım Ekle
+            </button>
+          </div>
+
+          {/* BÖLÜM 5: YAPILAN İMALATLAR & YARINKİ PLAN */}
+          <div style={{ background: 'var(--bg-soft)', padding: 14, borderRadius: 10, marginBottom: 14, border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--accent-patron)', marginBottom: 8 }}>
+              5. Bugün Yapılan İmalatlar & Saha İlerlemesi
+            </div>
+            <textarea 
+              rows={4} 
+              value={bugunYapilan} 
+              onChange={(e) => setBugunYapilan(e.target.value)} 
+              placeholder={'Madde madde yapılan işleri yazın:\n- Zemin şap dökümü tamamlandı\n- Duvar alçıpan kaplaması yapıldı\n- Elektrik kablo çekimi devam ediyor'} 
+              style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontFamily: 'inherit', fontSize: 14, marginBottom: 10 }} 
+            />
+
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--accent-patron)', marginBottom: 6 }}>
+              6. Yarın Planlanan İşler & Satın Alımlar
+            </div>
+            <textarea 
+              rows={2} 
+              value={yarinYapilacak} 
+              onChange={(e) => setYarinYapilacak(e.target.value)} 
+              placeholder="Örn: Leroy Merlin'den boya ve astar alınacak, 2. kat tavan montajına başlanacak..." 
+              style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontFamily: 'inherit', fontSize: 14 }} 
+            />
+          </div>
+
+          {/* BÖLÜM 7: GENEL ŞANTİYE NOTLARI */}
+          <div style={{ background: 'var(--bg-soft)', padding: 14, borderRadius: 10, marginBottom: 14, border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--accent-patron)', marginBottom: 8 }}>
+              7. Genel Şantiye Notları & Açıklamalar
+            </div>
+            <textarea 
+              rows={3} 
+              value={notlar} 
+              onChange={(e) => setNotlar(e.target.value)} 
+              placeholder="Şantiyeyle ilgili eklemek istediğiniz tüm genel notlar, hatırlatmalar veya karşılaşılan durumlar..." 
+              style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontFamily: 'inherit', fontSize: 13 }} 
+            />
+          </div>
+
+          <button 
+            className="action btn-ai" 
+            style={{ width: '100%', padding: '14px', fontSize: 14, fontWeight: 700 }} 
+            onClick={raporKaydet} 
+            disabled={kaydediliyor}
+          >
+            {kaydediliyor ? 'Kaydediliyor...' : 'Günlük Faaliyet Raporunu Kaydet ve Patrona Gönder'}
+          </button>
+
+          {mesaj && <div className={'feedback ' + mesaj.tip} style={{ marginTop: 12 }}>{mesaj.metin}</div>}
         </div>
       )}
     </div>
   );
 }
 
+
+
 /* ---------------- PERSONEL FİNANS & HAKEDİŞ TAB (Bireysel Görüntüleme) ---------------- */
 function PersonelFinansTab({ oturum }) {
-  const now = new Date();
-  const [yil, setYil] = useState(now.getFullYear());
-  const [ay, setAy] = useState(now.getMonth() + 1);
-  const [yukleniyor, setYukleniyor] = useState(true);
-  const [bilgi, setBilgi] = useState(null);
-
-  const ayAdlari = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
-
-  const veriyiYukle = useCallback(async () => {
-    setYukleniyor(true);
-    const ayBasi = new Date(yil, ay - 1, 1);
-    const aySonu = new Date(yil, ay, 0, 23, 59, 59);
-
-    const [{ data: pData }, { data: mesailer }, { data: manuelKayitlar }, { data: sahaManuelKayitlar }, { data: fmKayit }, { data: masraflar }] = await Promise.all([
-      supabase.from('personel').select('*').eq('personel_no', oturum.personel_no).maybeSingle(),
-      supabase.from('giris_cikis').select('giris_saati, sure_saat').eq('personel_no', oturum.personel_no).gte('giris_saati', ayBasi.toISOString()).lte('giris_saati', aySonu.toISOString()),
-      supabase.from('puantaj_manuel').select('*').eq('personel_no', oturum.personel_no).gte('tarih', `${yil}-${String(ay).padStart(2, '0')}-01`).lte('tarih', `${yil}-${String(ay).padStart(2, '0')}-31`),
-      supabase.from('saha_verileri').select('*').eq('kalem_turu', 'PUANTAJ_MANUEL').eq('personel_no', oturum.personel_no).gte('tarih', ayBasi.toISOString()).lte('tarih', aySonu.toISOString()),
-      supabase.from('aylik_fazla_mesai').select('*').eq('personel_no', oturum.personel_no).eq('yil', yil).eq('ay', ay).maybeSingle(),
-      supabase.from('saha_verileri').select('*').eq('personel_no', oturum.personel_no).gte('tarih', ayBasi.toISOString()).lte('tarih', aySonu.toISOString()).order('tarih', { ascending: false }),
-    ]);
-
-    const saatlikUcret = Number(pData?.gunluk_ucret) || Number(oturum.gunluk_ucret) || 0;
-    const gunSayisi = new Date(yil, ay, 0).getDate();
-
-    const otomatikGunlukSaat = {};
-    (mesailer || []).forEach((m) => {
-      if (m.giris_saati) {
-        const gunKey = new Date(m.giris_saati).toISOString().slice(0, 10);
-        otomatikGunlukSaat[gunKey] = (otomatikGunlukSaat[gunKey] || 0) + (Number(m.sure_saat) || 0);
-      }
-    });
-
-    const manuelMap = {};
-    (manuelKayitlar || []).forEach((m) => { manuelMap[m.tarih] = m.deger; });
-    (sahaManuelKayitlar || []).forEach((sRow) => {
-      const gunStr = new Date(sRow.tarih).toISOString().slice(0, 10);
-      let deger = sRow.fis_no || String(sRow.miktar);
-      if (sRow.aciklama) {
-        try {
-          const parsed = JSON.parse(sRow.aciklama);
-          if (parsed.deger) deger = parsed.deger;
-        } catch (e) {}
-      }
-      manuelMap[gunStr] = deger;
-    });
-
-    let calisilanSaat = 0;
-    let calisilanGun = 0;
-
-    for (let g = 1; g <= gunSayisi; g++) {
-      const tarihStr = `${yil}-${String(ay).padStart(2, '0')}-${String(g).padStart(2, '0')}`;
-      const manuelDeger = manuelMap[tarihStr];
-      let gunlukSaat = 0;
-
-      if (manuelDeger !== undefined && manuelDeger !== null && manuelDeger !== '') {
-        if (manuelDeger === '1') gunlukSaat = 8;
-        else if (manuelDeger === '0.5') gunlukSaat = 4;
-        else if (!isNaN(Number(manuelDeger)) && Number(manuelDeger) > 0) gunlukSaat = Number(manuelDeger);
-        else gunlukSaat = 0;
-      } else {
-        gunlukSaat = otomatikGunlukSaat[tarihStr] || 0;
-      }
-
-      if (gunlukSaat > 0) {
-        calisilanSaat += gunlukSaat;
-        calisilanGun += 1;
-      }
-    }
-
-    calisilanSaat = Math.round(calisilanSaat * 100) / 100;
-    const fmSaat = Number(fmKayit?.saat) || 0;
-    const hakedisTutari = (calisilanSaat * saatlikUcret) + (fmSaat * (saatlikUcret * 1.5));
-
-    const toplamMasraf = (masraflar || []).filter((m) => getIslemKategori(m) === 'harcama').reduce((acc, m) => acc + (Number(m.toplam) || 0), 0);
-    const toplamAvans = (masraflar || []).filter((m) => getIslemKategori(m) === 'avans').reduce((acc, m) => acc + (Number(m.toplam) || 0), 0);
-    const toplamPrim = (masraflar || []).filter((m) => getIslemKategori(m) === 'prim').reduce((acc, m) => acc + (Number(m.toplam) || 0), 0);
-    const toplamKesinti = (masraflar || []).filter((m) => getIslemKategori(m) === 'kesinti').reduce((acc, m) => acc + (Number(m.toplam) || 0), 0);
-    const odenmisMaas = (masraflar || []).filter((m) => getIslemKategori(m) === 'maas_odeme').reduce((acc, m) => acc + (Number(m.toplam) || 0), 0);
-
-    const netKalan = hakedisTutari + toplamMasraf + toplamPrim - toplamAvans - toplamKesinti - odenmisMaas;
-
-    setBilgi({
-      saatlikUcret,
-      calisilanSaat,
-      calisilanGun,
-      fmSaat,
-      hakedisTutari,
-      toplamMasraf,
-      toplamAvans,
-      toplamPrim,
-      toplamKesinti,
-      odenmisMaas,
-      netKalan,
-      masraflar: (masraflar || []).filter((m) => getIslemKategori(m) !== 'bilgi_kaydi'),
-    });
-
-    setYukleniyor(false);
-  }, [oturum, yil, ay]);
-
-  useEffect(() => { veriyiYukle(); }, [veriyiYukle]);
-
   async function bordroPdfIndir() {
     if (!bilgi) return;
     const { data: ozlukKayit } = await supabase.from('saha_verileri').select('*').eq('kalem_turu', 'PERSONEL_OZLUK').eq('personel_no', oturum.personel_no).order('tarih', { ascending: false }).limit(1);
@@ -1256,18 +1673,142 @@ function PersonelFinansTab({ oturum }) {
     });
   }
 
+  const now = new Date();
+  const [yil, setYil] = useState(now.getFullYear());
+  const [ay, setAy] = useState(now.getMonth() + 1);
+  const [yukleniyor, setYukleniyor] = useState(true);
+  const [bilgi, setBilgi] = useState(null);
+
+  const ayAdlari = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+
+  const veriyiYukle = useCallback(async () => {
+    setYukleniyor(true);
+    const gunSayisi = new Date(yil, ay, 0).getDate();
+    const ayBasi = new Date(yil, ay - 1, 1);
+    const aySonu = new Date(yil, ay, 0, 23, 59, 59);
+    const ayBasiStr = `${yil}-${String(ay).padStart(2, '0')}-01`;
+    const aySonuStr = `${yil}-${String(ay).padStart(2, '0')}-${String(gunSayisi).padStart(2, '0')}`;
+    const bugunStr = new Date().toISOString().slice(0, 10);
+
+    const [{ data: pData }, { data: mesailer }, { data: manuelKayitlar }, { data: sahaManuelKayitlar }, { data: fmKayit }, { data: masraflar }, { data: izinler }] = await Promise.all([
+      supabase.from('personel').select('*').eq('personel_no', oturum.personel_no).maybeSingle(),
+      supabase.from('giris_cikis').select('giris_saati, sure_saat, durum').eq('personel_no', oturum.personel_no).gte('giris_saati', ayBasi.toISOString()).lte('giris_saati', aySonu.toISOString()),
+      supabase.from('puantaj_manuel').select('*').eq('personel_no', oturum.personel_no).gte('tarih', ayBasiStr).lte('tarih', aySonuStr),
+      supabase.from('saha_verileri').select('*').eq('kalem_turu', 'PUANTAJ_MANUEL').eq('personel_no', oturum.personel_no).gte('tarih', ayBasi.toISOString()).lte('tarih', aySonu.toISOString()),
+      supabase.from('aylik_fazla_mesai').select('*').eq('personel_no', oturum.personel_no).eq('yil', yil).eq('ay', ay).maybeSingle(),
+      supabase.from('saha_verileri').select('*').eq('personel_no', oturum.personel_no).gte('tarih', ayBasi.toISOString()).lte('tarih', aySonu.toISOString()).order('tarih', { ascending: false }),
+      supabase.from('saha_verileri').select('*').eq('kalem_turu', 'IZIN_TALEBI').eq('personel_no', oturum.personel_no),
+    ]);
+
+    const saatlikUcret = Number(pData?.gunluk_ucret) || Number(oturum.gunluk_ucret) || 0;
+
+    const otomatikGunlukSaat = {};
+    (mesailer || []).forEach((m) => {
+      if (m.giris_saati) {
+        const gunKey = new Date(m.giris_saati).toISOString().slice(0, 10);
+        let sure = Number(m.sure_saat) || 0;
+        if (m.durum === 'Açık') {
+          sure = gunKey < bugunStr ? 11 : Math.min(11, Math.round(Math.max(0, (new Date() - new Date(m.giris_saati)) / 3600000) * 100) / 100);
+        }
+        otomatikGunlukSaat[gunKey] = (otomatikGunlukSaat[gunKey] || 0) + sure;
+      }
+    });
+
+    const manuelMap = {};
+
+    // 1. Onaylanan İzinleri Otomatik Puantaja Yansıt
+    (izinler || []).forEach((row) => {
+      let detay = {};
+      try { detay = JSON.parse(row.aciklama || '{}'); } catch (e) {}
+      const durum = row.fis_no || detay.durum;
+      if (durum === 'Onaylandı' && detay.baslangic && detay.bitis) {
+        const bDate = new Date(detay.baslangic + 'T00:00:00');
+        const sDate = new Date(detay.bitis + 'T00:00:00');
+        const kod = (detay.izin_turu || '').includes('Rapor') || (detay.izin_turu || '').includes('Sağlık') ? 'R' : 'I';
+
+        for (let d = new Date(bDate); d <= sDate; d.setDate(d.getDate() + 1)) {
+          const dStr = d.toISOString().slice(0, 10);
+          if (dStr >= ayBasiStr && dStr <= aySonuStr) {
+            manuelMap[dStr] = kod;
+          }
+        }
+      }
+    });
+
+    // 2. Manuel Puantaj Girişleri
+    (manuelKayitlar || []).forEach((m) => { manuelMap[m.tarih] = m.deger; });
+    (sahaManuelKayitlar || []).forEach((sRow) => {
+      const gunStr = new Date(sRow.tarih).toISOString().slice(0, 10);
+      let deger = sRow.fis_no || String(sRow.miktar);
+      if (sRow.aciklama) {
+        try {
+          const parsed = JSON.parse(sRow.aciklama);
+          if (parsed.deger) deger = parsed.deger;
+        } catch (e) {}
+      }
+      manuelMap[gunStr] = deger;
+    });
+
+    let calisilanSaat = 0;
+    let calisilanGun = 0;
+
+    for (let g = 1; g <= gunSayisi; g++) {
+      const tarihStr = `${yil}-${String(ay).padStart(2, '0')}-${String(g).padStart(2, '0')}`;
+      const manuelDeger = manuelMap[tarihStr];
+      let gunlukSaat = 0;
+
+      if (manuelDeger !== undefined && manuelDeger !== null && manuelDeger !== '') {
+        if (manuelDeger === '1') gunlukSaat = 11;
+        else if (manuelDeger === '0.5') gunlukSaat = 5.5;
+        else if (!isNaN(Number(manuelDeger)) && Number(manuelDeger) > 0) gunlukSaat = Number(manuelDeger);
+        else gunlukSaat = 0;
+      } else {
+        gunlukSaat = otomatikGunlukSaat[tarihStr] || 0;
+      }
+
+      if (gunlukSaat > 0) {
+        calisilanSaat += gunlukSaat;
+        calisilanGun += 1;
+      }
+    }
+
+    calisilanSaat = Math.round(calisilanSaat * 100) / 100;
+    const fmSaat = Number(fmKayit?.saat) || 0;
+    const hakedisTutari = (calisilanSaat + fmSaat) * saatlikUcret; // Normal ücret (1.0x)
+
+    const toplamMasraf = (masraflar || []).filter((m) => getIslemKategori(m) === 'harcama').reduce((acc, m) => acc + (Number(m.toplam) || 0), 0);
+    const toplamAvans = (masraflar || []).filter((m) => getIslemKategori(m) === 'avans').reduce((acc, m) => acc + (Number(m.toplam) || 0), 0);
+    const toplamPrim = (masraflar || []).filter((m) => getIslemKategori(m) === 'prim').reduce((acc, m) => acc + (Number(m.toplam) || 0), 0);
+    const toplamKesinti = (masraflar || []).filter((m) => getIslemKategori(m) === 'kesinti').reduce((acc, m) => acc + (Number(m.toplam) || 0), 0);
+    const odenmisMaas = (masraflar || []).filter((m) => getIslemKategori(m) === 'maas_odeme').reduce((acc, m) => acc + (Number(m.toplam) || 0), 0);
+
+    const netKalan = hakedisTutari + toplamMasraf + toplamPrim - toplamAvans - toplamKesinti - odenmisMaas;
+
+    setBilgi({
+      saatlikUcret,
+      calisilanSaat,
+      calisilanGun,
+      fmSaat,
+      hakedisTutari,
+      toplamMasraf,
+      toplamAvans,
+      toplamPrim,
+      toplamKesinti,
+      odenmisMaas,
+      netKalan,
+      masraflar: (masraflar || []).filter((m) => getIslemKategori(m) !== 'bilgi_kaydi'),
+    });
+
+    setYukleniyor(false);
+  }, [oturum, yil, ay]);
+
+  useEffect(() => { veriyiYukle(); }, [veriyiYukle]);
+
   return (
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
         <h2 className="section" style={{ margin: 0 }}>💰 Aylık Hakediş ve Avans Durumum</h2>
-        <button
-          className="action btn-secondary"
-          style={{ width: 'auto', margin: 0, padding: '7px 14px', fontSize: 12 }}
-          onClick={bordroPdfIndir}
-          disabled={!bilgi}
-        >
-          📄 Resmi Bordro PDF İndir
-        </button>
+        <button className="action btn-secondary" style={{ width: 'auto', margin: 0, padding: '7px 14px', fontSize: 12 }} onClick={bordroPdfIndir} disabled={!bilgi}>📄 Resmi Bordro PDF İndir</button>
       </div>
       <div className="grid cols-2" style={{ marginTop: 10 }}>
         <div>
@@ -1844,6 +2385,9 @@ function formatIslemAciklama(row) {
 
   return aciklama || row.kalem_turu || row.fis_no || '—';
 }
+
+
+
 
 function trKarakter(str) {
   return String(str || '')
