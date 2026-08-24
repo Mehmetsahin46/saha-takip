@@ -21,6 +21,11 @@ export default function LoginPage() {
     if (kayit) {
       try {
         const parsed = JSON.parse(kayit);
+        const now = Date.now();
+        if (parsed.expires_at && now > parsed.expires_at) {
+          localStorage.removeItem('aktifOturum');
+          return;
+        }
         if (parsed.rol === 'patron') router.push('/patron');
         else if (parsed.rol === 'personel' || parsed.rol === 'formen') router.push('/personel');
       } catch (e) {
@@ -73,7 +78,13 @@ export default function LoginPage() {
         return;
       }
 
-      localStorage.setItem('aktifOturum', JSON.stringify(kullanici));
+      const sessionPayload = {
+        ...kullanici,
+        login_at: Date.now(),
+        expires_at: Date.now() + (7 * 24 * 60 * 60 * 1000), // 7 günlük güvenli oturum
+      };
+
+      localStorage.setItem('aktifOturum', JSON.stringify(sessionPayload));
 
       if (kullanici.rol === 'patron') {
         router.push('/patron');
@@ -81,7 +92,7 @@ export default function LoginPage() {
         router.push('/personel');
       }
     } catch (err) {
-      setHata('Giriş yapılırken bir hata oluştu: ' + err.message);
+      setHata('Giriş yapılırken bir hata oluştu.');
       setYukleniyor(false);
     }
   }

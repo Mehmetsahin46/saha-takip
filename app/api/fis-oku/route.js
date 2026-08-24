@@ -1,20 +1,60 @@
 import { NextResponse } from 'next/server';
 
+// In-memory rate limiting (IP bazlı 1 dakikada max 25 istek)
+const rateLimitMap = new Map();
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const windowMs = 60 * 1000;
+  const maxRequests = 25;
+
+  const current = rateLimitMap.get(ip) || [];
+  const recent = current.filter((timestamp) => now - timestamp < windowMs);
+
+  if (recent.length >= maxRequests) {
+    return true;
+  }
+
+  recent.push(now);
+  rateLimitMap.set(ip, recent);
+  return false;
+}
+
 export async function POST(request) {
   try {
-    const { image, mediaType } = await request.json();
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown-ip';
 
-    if (!image) {
-      return NextResponse.json({ basari: false, mesaj: 'Görsel verisi bulunamadı.' }, { status: 400 });
+    if (isRateLimited(ip)) {
+      return NextResponse.json(
+        { basari: false, mesaj: 'Çok fazla istek gönderildi. Lütfen bir dakika bekleyin.' },
+        { status: 429 }
+      );
+    }
+
+    const body = await request.json().catch(() => null);
+    if (!body || !body.image) {
+      return NextResponse.json({ basari: false, mesaj: 'Geçersiz veya eksik görsel verisi.' }, { status: 400 });
+    }
+
+    const { image, mediaType } = body;
+
+    // Dosya boyutu sınırı (Max ~6MB base64)
+    if (typeof image !== 'string' || image.length > 8 * 1024 * 1024) {
+      return NextResponse.json({ basari: false, mesaj: 'Görsel boyutu çok büyük (Max 5MB).' }, { status: 400 });
+    }
+
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+    const detectedMime = mediaType || (image.startsWith('data:image/png') ? 'image/png' : 'image/jpeg');
+
+    if (!allowedMimeTypes.includes(detectedMime.toLowerCase())) {
+      return NextResponse.json({ basari: false, mesaj: 'Desteklenmeyen dosya formatı. (Sadece JPG, PNG, WEBP)' }, { status: 400 });
     }
 
     const geminiKey = process.env.GEMINI_API_KEY;
 
-    // Eğer Gemini API Anahtarı girilmişse Google Gemini Vision API ile fişi oku
     if (geminiKey) {
       try {
         const base64Data = image.includes(',') ? image.split(',')[1] : image;
-        const mimeType = mediaType || (image.startsWith('data:image/png') ? 'image/png' : 'image/jpeg');
 
         const prompt = `Sen bir inşaat ve şantiye muhasebe uzmanısın. Ekteki fiş/fatura görselini analiz et ve JSON formatında şu alanları döndür:
 - "kalem_turu": Alınan malzemenin/hizmetin kısa kategorisi (örn: "Çimento", "Akaryakıt", "Yemek", "Hırdavat", "Boya", "Demir").
@@ -38,7 +78,7 @@ Sadece geçerli bir JSON objesi döndür, markdown blokları veya ekstra metin e
                   { text: prompt },
                   {
                     inline_data: {
-                      mime_type: mimeType,
+                      mime_type: detectedMime,
                       data: base64Data,
                     },
                   },
@@ -60,29 +100,29 @@ Sadece geçerli bir JSON objesi döndür, markdown blokları veya ekstra metin e
           return NextResponse.json({
             basari: true,
             veri: {
-              kalem_turu: parsed.kalem_turu || 'Şantiye Gideri',
-              miktar: Number(parsed.miktar) || 1,
-              birim_fiyat: Number(parsed.birim_fiyat) || 0,
-              aciklama: parsed.aciklama || 'Fişten okundu',
+              kalem_turu: String(parsed.kalem_turu || 'Şantiye Gideri').slice(0, 80),
+              miktar: Math.max(0.01, Number(parsed.miktar) || 1),
+              birim_fiyat: Math.max(0, Number(parsed.birim_fiyat) || 0),
+              aciklama: String(parsed.aciklama || 'Fişten okundu').slice(0, 200),
             },
           });
         }
       } catch (aiErr) {
-        console.warn('Gemini OCR API çağrısı başarısız, simülasyona geçiliyor:', aiErr.message);
+        console.warn('Gemini OCR API çağrısı başarısız:', aiErr.message);
       }
     }
 
-    // Yedek / Demo Modu (API Key henüz girilmediğinde sistemin sorunsuz çalışması için)
+    // Yedek / Demo Modu
     return NextResponse.json({
       basari: true,
       veri: {
         kalem_turu: 'Hırdavat & Sarf Malzeme',
         miktar: 1,
-        birim_fiyat: 120.00,
-        aciklama: 'Otomatik fiş tarama simülasyonu (Gemini API anahtarı ekleyerek canlı OCR açabilirsiniz)',
+        birim_fiyat: 120.0,
+        aciklama: 'Otomatik fiş tarama simülasyonu',
       },
     });
   } catch (error) {
-    return NextResponse.json({ basari: false, mesaj: 'Fiş okunamadı: ' + error.message }, { status: 500 });
+    return NextResponse.json({ basari: false, mesaj: 'İşlem gerçekleştirilemedi.' }, { status: 500 });
   }
 }

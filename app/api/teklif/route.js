@@ -2,24 +2,28 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request) {
   try {
-    const { lokasyon, toplamMaliyet, kalemler } = await request.json();
-
-    if (!lokasyon) {
-      return NextResponse.json({ basari: false, mesaj: 'Lokasyon bilgisi eksik.' }, { status: 400 });
+    const body = await request.json().catch(() => null);
+    if (!body || !body.lokasyon) {
+      return NextResponse.json({ basari: false, mesaj: 'Lokasyon bilgisi zorunludur.' }, { status: 400 });
     }
+
+    const { lokasyon, toplamMaliyet, kalemler } = body;
+    const sanitizedLokasyon = String(lokasyon).slice(0, 120).trim();
+    const sanitizedMaliyet = Math.max(0, Number(toplamMaliyet) || 0);
+    const sanitizedKalemler = Array.isArray(kalemler) ? kalemler.slice(0, 60) : [];
 
     const geminiKey = process.env.GEMINI_API_KEY;
 
     if (geminiKey) {
       try {
-        const kalemOzetleri = (kalemler || [])
-          .map((k) => `- ${k.kalem_turu}: ${k.miktar} birim x ${k.birim_fiyat} PLN = ${k.toplam} PLN (${k.aciklama || 'açıklama yok'})`)
+        const kalemOzetleri = sanitizedKalemler
+          .map((k) => `- ${String(k.kalem_turu || '').slice(0, 50)}: ${Number(k.miktar) || 1} birim x ${Number(k.birim_fiyat) || 0} PLN = ${Number(k.toplam) || 0} PLN`)
           .join('\n');
 
         const prompt = `Aşağıda belirtilen şantiye lokasyonu ve girilen maliyet kalemleri için müşteriye sunulacak resmi, profesyonel ve ikna edici bir inşaat/taşeron fiyat teklif mektubu hazırla.
 
-Lokasyon: ${lokasyon}
-Toplam Maliyet: ${toplamMaliyet} PLN
+Lokasyon: ${sanitizedLokasyon}
+Toplam Maliyet: ${sanitizedMaliyet} PLN
 Kalemler:
 ${kalemOzetleri || 'Detay girilmedi.'}
 
@@ -57,16 +61,16 @@ Teklif metninde şunlar yer alsın:
     const yedekMetin = `SAYIN İŞVEREN / PROJE YÖNETİMİ
 
 Tarih: ${bugun}
-Konu: ${lokasyon} Projesi İmalat ve Uygulama Fiyat Teklifi
+Konu: ${sanitizedLokasyon} Projesi İmalat ve Uygulama Fiyat Teklifi
 
-${lokasyon} adresindeki projeniz kapsamında tarafımızca incelenen keşif ve saha verileri doğrultusunda hazırlanan detaylı teklifimiz aşağıda bilginize sunulmuştur:
+${sanitizedLokasyon} adresindeki projeniz kapsamında tarafımızca incelenen keşif ve saha verileri doğrultusunda hazırlanan detaylı teklifimiz aşağıda bilginize sunulmuştur:
 
 1. KAPSAM VE MALİYET DETAYLARI:
-${(kalemler || []).map((k) => `• ${k.kalem_turu}: ${k.miktar} Adet/Birim — Toplam: ${Number(k.toplam || 0).toLocaleString('pl-PL')} PLN`).join('\n') || '• Saha genel imalat ve uygulama kalemleri'}
+${sanitizedKalemler.map((k) => `• ${k.kalem_turu}: ${k.miktar} Adet/Birim — Toplam: ${Number(k.toplam || 0).toLocaleString('pl-PL')} PLN`).join('\n') || '• Saha genel imalat ve uygulama kalemleri'}
 
 2. FİNANSAL ÖZET:
-Keşif Toplam Maliyet Bedeli: ${Number(toplamMaliyet || 0).toLocaleString('pl-PL')} PLN
-Teklif Bedeli (KDV Hariç): ${(Number(toplamMaliyet || 0) * 1.25).toLocaleString('pl-PL')} PLN
+Keşif Toplam Maliyet Bedeli: ${sanitizedMaliyet.toLocaleString('pl-PL')} PLN
+Teklif Bedeli (KDV Hariç): ${(sanitizedMaliyet * 1.25).toLocaleString('pl-PL')} PLN
 
 3. ŞARTLAR VE TAAHHÜT:
 - Tüm imalatlar yürürlükteki yapı denetim ve iş güvenliği standartlarına uygun olarak gerçekleştirilecektir.
@@ -78,6 +82,6 @@ Saha Takip & İnşaat Yönetimi`;
 
     return NextResponse.json({ basari: true, teklifMetni: yedekMetin });
   } catch (error) {
-    return NextResponse.json({ basari: false, mesaj: 'Teklif hazırlanamadı: ' + error.message }, { status: 500 });
+    return NextResponse.json({ basari: false, mesaj: 'Teklif hazırlanamadı.' }, { status: 500 });
   }
 }
