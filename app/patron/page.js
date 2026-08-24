@@ -2560,7 +2560,7 @@ function PuantajTab() {
         <div>
           <h2 className="section" style={{ margin: 0 }}>{t('aylikSaatlikPuantaj')}</h2>
           <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 4 }}>
-            Sistem personelin giriş-çıkış saatlerini anlık hesaplar. Düzenlemek istediğiniz güne <b>tıklayarak seçim kutusundan</b> saati veya durumu tek tıkla belirleyebilirsiniz.
+            {t('puantajAciklama')}
           </div>
         </div>
         <button
@@ -2595,25 +2595,25 @@ function PuantajTab() {
       {toplamSaatFn && !yukleniyor && (
         <div className="grid cols-3" style={{ marginTop: 12, marginBottom: 12, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
           <div className="stat-card">
-            <div className="label">Aylık Toplam Çalışma Süresi</div>
+            <div className="label">{t('aylikToplamCalismaSuresi')}</div>
             <div className="value" style={{ color: 'var(--accent-patron)' }}>
-              {sureFormatla(personelListesi.reduce((acc, p) => acc + (toplamSaatFn(p.personel_no) || 0), 0))}
+              {sureFormatlaLocale(personelListesi.reduce((acc, p) => acc + (toplamSaatFn(p.personel_no) || 0), 0))}
             </div>
-            <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>Tüm ekibin net mesai süresi</div>
+            <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{t('tumEkipNetMesai')}</div>
           </div>
           <div className="stat-card" style={{ background: 'rgba(245, 158, 11, 0.08)', borderColor: '#f59e0b' }}>
-            <div className="label" style={{ color: '#d97706' }}>⚡ Aylık Toplam Fazla Mesai (FM)</div>
+            <div className="label" style={{ color: '#d97706' }}>{t('aylikToplamFazlaMesai')}</div>
             <div className="value" style={{ color: '#b45309' }}>
-              {personelListesi.reduce((acc, p) => acc + (Number(kaydedilenFazlaMesai[p.personel_no]) || 0), 0)} saat
+              {personelListesi.reduce((acc, p) => acc + (Number(kaydedilenFazlaMesai[p.personel_no]) || 0), 0)} {t('saat')}
             </div>
-            <div style={{ fontSize: 11, color: '#d97706' }}>1.5x katsayı ile hakedişe yansıyan süre</div>
+            <div style={{ fontSize: 11, color: '#d97706' }}>{t('fazlaMesaiAciklama')}</div>
           </div>
           <div className="stat-card">
-            <div className="label">Aktif Personel Sayısı</div>
+            <div className="label">{t('aktifPersonelSayisi')}</div>
             <div className="value" style={{ color: '#16a34a' }}>
-              {personelListesi.filter(p => !ozlukMap[p.personel_no]?.durum || ozlukMap[p.personel_no]?.durum === 'Aktif').length} kişi
+              {personelListesi.filter(p => !ozlukMap[p.personel_no]?.durum || ozlukMap[p.personel_no]?.durum === 'Aktif').length} {t('kisi')}
             </div>
-            <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>Puantajdaki toplam çalışan</div>
+            <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{t('puantajdakiToplamCalisan')}</div>
           </div>
         </div>
       )}
@@ -2708,9 +2708,9 @@ function PuantajTab() {
                       );
                     })}
                     <td style={{ textAlign: 'center', fontWeight: 800, fontSize: 12, color: 'var(--accent-patron)', background: 'var(--accent-patron-soft)', whiteSpace: 'nowrap' }}>
-                      {sureFormatla(toplamSaat)}
+                      {sureFormatlaLocale(toplamSaat)}
                     </td>
-                    <td style={{ textAlign: 'center', fontWeight: 600 }}>{calisilanGun} gün</td>
+                    <td style={{ textAlign: 'center', fontWeight: 600 }}>{calisilanGun} {t('gun')}</td>
                     <td style={{ textAlign: 'center', background: fmSaati > 0 ? 'rgba(245, 158, 11, 0.08)' : 'transparent' }}>
                       <div style={{ display: 'flex', gap: 4, alignItems: 'center', justifyContent: 'center' }}>
                         <input
@@ -2939,7 +2939,7 @@ function formatIslemAciklama(row) {
 
 /* ---------------- AYLIK PERSONEL HAKEDİŞİ & MAAŞ KAPATMA ---------------- */
 function HakedisTab() {
-  const { t, aylar } = useLocale();
+  const { t, aylar, formatRol, sureFormatlaLocale } = useLocale();
   const now = new Date();
   const [yil, setYil] = useState(now.getFullYear());
   const [ay, setAy] = useState(now.getMonth() + 1);
@@ -3086,11 +3086,9 @@ function HakedisTab() {
 
   return (
     <div className="card">
-      <h2 className="section">💰 Aylık Hakediş ve Maaş Kapatma Tablosu</h2>
+      <h2 className="section">{t('hakedisTabloBaslik')}</h2>
       <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 4, marginBottom: 10 }}>
-        Saatlik Hakediş = <b>(Toplam Çalışılan Saat × Saatlik Ücret)</b> + Fazla Mesai × (Saatlik Ücret × 1.5).
-        <br />
-        <b>Net Ödenecek</b> = (Brüt Saatlik Hakediş + Şantiye Harcaması + Prim) − (Avans + Maaş Kesintisi + Önceden Ödenen Maaş).
+{t('hakedisFormulAciklama')}
       </div>
       <div className="grid cols-2">
         <div>
@@ -3105,16 +3103,16 @@ function HakedisTab() {
         </div>
       </div>
 
-      <button className="action btn-secondary" onClick={disaAktar} disabled={yukleniyor || !satirlar.length}>📊 Excel Bordro İndir</button>
+      <button className="action btn-secondary" onClick={disaAktar} disabled={yukleniyor || !satirlar.length}>{t('excelBordroIndir')}</button>
 
       <div className="grid cols-4" style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
-        <div className="stat-card"><div className="label">Toplam Brüt Hakediş</div><div className="value">{formatPLN(genelHakedis)}</div></div>
-        <div className="stat-card"><div className="label">Şantiye Masrafı (+)</div><div className="value" style={{ color: '#16a34a' }}>+{formatPLN(genelMasraf)}</div></div>
-        <div className="stat-card"><div className="label">Toplam Prim (+)</div><div className="value" style={{ color: '#16a34a' }}>+{formatPLN(genelPrim)}</div></div>
-        <div className="stat-card"><div className="label">Verilen Avanslar (-)</div><div className="value" style={{ color: '#dc2626' }}>-{formatPLN(genelAvans)}</div></div>
-        <div className="stat-card"><div className="label">Maaş Kesintileri (-)</div><div className="value" style={{ color: '#dc2626' }}>-{formatPLN(genelKesinti)}</div></div>
+        <div className="stat-card"><div className="label">{t('toplamBrutHakedis')}</div><div className="value">{formatPLN(genelHakedis)}</div></div>
+        <div className="stat-card"><div className="label">{t('santiyeMasrafiArti')}</div><div className="value" style={{ color: '#16a34a' }}>+{formatPLN(genelMasraf)}</div></div>
+        <div className="stat-card"><div className="label">{t('toplamPrimArti')}</div><div className="value" style={{ color: '#16a34a' }}>+{formatPLN(genelPrim)}</div></div>
+        <div className="stat-card"><div className="label">{t('verilenAvanslarEksi')}</div><div className="value" style={{ color: '#dc2626' }}>-{formatPLN(genelAvans)}</div></div>
+        <div className="stat-card"><div className="label">{t('maasKesintileriEksi')}</div><div className="value" style={{ color: '#dc2626' }}>-{formatPLN(genelKesinti)}</div></div>
         <div className="stat-card" style={{ background: 'var(--accent-patron-soft)', borderColor: 'var(--accent-patron)' }}>
-          <div className="label" style={{ color: 'var(--accent-patron)' }}>Şirket Net Kalan Borcu</div>
+          <div className="label" style={{ color: 'var(--accent-patron)' }}>{t('sirketNetKalanBorcu')}</div>
           <div className="value" style={{ color: 'var(--accent-patron)' }}>{formatPLN(genelNet)}</div>
         </div>
       </div>
@@ -3137,12 +3135,12 @@ function HakedisTab() {
                 <tr key={s.personel_no}>
                   <td className="sticky-col-cell">
                     <span className="personel-name" title={s.ad}>{s.ad}</span>
-                    <div className="personel-sub">{s.personel_no} · {s.rol}</div>
+                    <div className="personel-sub">{s.personel_no} · {formatRol(s.rol)}</div>
                   </td>
-                  <td>{s.rol}</td>
+                  <td>{formatRol(s.rol)}</td>
                   <td>{formatPLN(s.saatlikUcret)}/sa</td>
-                  <td><b style={{ color: 'var(--accent-patron)', fontSize: 13 }}>{sureFormatla(s.calisilanSaat)}</b></td>
-                  <td><b>{s.calisilanGun}</b> gün</td>
+                  <td><b style={{ color: 'var(--accent-patron)', fontSize: 13 }}>{sureFormatlaLocale(s.calisilanSaat)}</b></td>
+                  <td><b>{s.calisilanGun}</b> {t('gun')}</td>
                   <td>{s.fmSaat > 0 ? `${s.fmSaat} sa` : '—'}</td>
                   <td><b>{formatPLN(s.hakedisTutari)}</b></td>
                   <td style={{ color: '#16a34a' }}>{s.toplamMasraf > 0 ? `+${formatPLN(s.toplamMasraf)}` : '—'}</td>
@@ -3318,29 +3316,29 @@ function AvansPrimTab() {
     <div className="grid cols-2">
       {/* YENİ AVANS / PRİM GİRİŞ FORMU */}
       <div className="card">
-        <h2 className="section">💵 Yeni Avans / Prim / Kesinti Kaydı</h2>
+        <h2 className="section">{t('yeniAvansPrimBaslik')}</h2>
         <form onSubmit={avansKaydet}>
-          <label>Personel Seçiniz</label>
+          <label>{t('personelSeciniz')}</label>
           <select value={seciliPersonelNo} onChange={(e) => setSeciliPersonelNo(e.target.value)}>
             {personeller.map((p) => (
               <option key={p.personel_no} value={p.personel_no}>{p.ad} ({p.rol})</option>
             ))}
           </select>
 
-          <label style={{ marginTop: 12 }}>İşlem Türü</label>
+          <label style={{ marginTop: 12 }}>{t('islemTuru')}</label>
           <div className="chip-row">
             <span className={'chip' + (islemTuru === 'avans' ? ' sel' : '')} onClick={() => setIslemTuru('avans')}>
-              💵 Avans (-)
+              💵 {t('avans')} (-)
             </span>
             <span className={'chip' + (islemTuru === 'prim' ? ' sel' : '')} onClick={() => setIslemTuru('prim')}>
-              🎁 Prim (+)
+              🎁 {t('prim')} (+)
             </span>
             <span className={'chip' + (islemTuru === 'kesinti' ? ' sel' : '')} onClick={() => setIslemTuru('kesinti')}>
-              ⚠️ Kesinti (-)
+              ⚠️ {t('kesinti')} (-)
             </span>
           </div>
 
-          <label style={{ marginTop: 12 }}>Tutar (PLN)</label>
+          <label style={{ marginTop: 12 }}>{t('tutarPln')}</label>
           <input
             type="number"
             step="0.01"
@@ -3350,7 +3348,7 @@ function AvansPrimTab() {
             required
           />
 
-          <label>Ödemenin Yapıldığı Şantiye / Kasa</label>
+          <label>{t('odemeSantiyesi')}</label>
           <select value={lokasyon} onChange={(e) => setLokasyon(e.target.value)}>
             <option value="Merkez Kasa">Merkez Kasa</option>
             {lokasyonlar.map((l) => (
@@ -3358,22 +3356,22 @@ function AvansPrimTab() {
             ))}
           </select>
 
-          <label>Makbuz / Dekont No (opsiyonel)</label>
+          <label>{t('makbuzDekontNo')}</label>
           <input
-            placeholder="örn. DEK-8491"
+            placeholder={t('makbuzPlaceholder')}
             value={belgeNo}
             onChange={(e) => setBelgeNo(e.target.value)}
           />
 
-          <label>Açıklama / Not</label>
+          <label>{t('aciklamaNot')}</label>
           <input
-            placeholder="örn. Elden nakit avans verildi"
+            placeholder={t('avansAciklamaPlaceholder')}
             value={aciklama}
             onChange={(e) => setAciklama(e.target.value)}
           />
 
           <button type="submit" className="action btn-punch" style={{ marginTop: 16 }} disabled={kaydediliyor}>
-            {kaydediliyor ? 'Kaydediliyor...' : '✓ Finansal İşlemi Kaydet'}
+            {kaydediliyor ? t('ekleniyor') : t('finansalIslemiKaydet')}
           </button>
         </form>
         {mesaj && <div className={'feedback ' + mesaj.tip}>{mesaj.metin}</div>}
@@ -3381,12 +3379,12 @@ function AvansPrimTab() {
 
       {/* GEÇMİŞ AVANS VE PRİM LİSTESİ */}
       <div className="card">
-        <h2 className="section">📋 Kayıtlı Avans ve Prim Hareketleri</h2>
+        <h2 className="section">{t('kayitliAvansPrimBaslik')}</h2>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 12 }}>
           <div style={{ flex: 1 }}>
-            <label style={{ margin: 0, fontSize: 11 }}>Personele Göre Filtrele</label>
+            <label style={{ margin: 0, fontSize: 11 }}>{t('personeleGoreFiltrele')}</label>
             <select value={filtrePersonel} onChange={(e) => setFiltrePersonel(e.target.value)} style={{ padding: '6px 8px', fontSize: 12 }}>
-              <option value="Tümü">Tüm Personeller</option>
+              <option value="Tümü">{t('tumPersoneller')}</option>
               {personeller.map((p) => (
                 <option key={p.personel_no} value={p.personel_no}>{p.ad}</option>
               ))}
@@ -3412,8 +3410,8 @@ function AvansPrimTab() {
         </div>
 
         <div className="grid cols-2" style={{ marginBottom: 12 }}>
-          <div className="stat-card"><div className="label">Toplam Avans</div><div className="value" style={{ color: '#dc2626' }}>{formatPLN(toplamAvansTutar)}</div></div>
-          <div className="stat-card"><div className="label">Toplam Prim</div><div className="value" style={{ color: '#16a34a' }}>{formatPLN(toplamPrimTutar)}</div></div>
+          <div className="stat-card"><div className="label">{t('toplamAvans')}</div><div className="value" style={{ color: '#dc2626' }}>{formatPLN(toplamAvansTutar)}</div></div>
+          <div className="stat-card"><div className="label">{t('toplamPrim')}</div><div className="value" style={{ color: '#16a34a' }}>{formatPLN(toplamPrimTutar)}</div></div>
         </div>
 
         {yukleniyor ? (
@@ -3449,7 +3447,7 @@ function AvansPrimTab() {
                       <td><b>{formatPLN(k.toplam)}</b></td>
                       <td style={{ fontSize: 11.5, color: 'var(--ink-soft)', maxWidth: 260 }}>{formatIslemAciklama(k)}</td>
                       <td>
-                        <button onClick={() => kayitSil(k.id)} style={{ border: 'none', background: 'rgba(220, 38, 38, 0.14)', color: '#ef4444', borderRadius: 6, padding: '4px 8px', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}>Sil</button>
+                        <button onClick={() => kayitSil(k.id)} style={{ border: 'none', background: 'rgba(220, 38, 38, 0.14)', color: '#ef4444', borderRadius: 6, padding: '4px 8px', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}>{t('sil')}</button>
                       </td>
                     </tr>
                   );
@@ -3468,7 +3466,7 @@ function AvansPrimTab() {
 
 /* ---------------- PERSONEL CARİ HESAP EKSTRESİ ---------------- */
 function PersonelCariEkstreTab() {
-  const { t } = useLocale();
+  const { t, sureFormatlaLocale } = useLocale();
   const now = new Date();
   const ayBasi = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
   const bugun = now.toISOString().slice(0, 10);
@@ -3577,10 +3575,10 @@ function PersonelCariEkstreTab() {
 
   return (
     <div className="card">
-      <h2 className="section">📄 Personel Bireysel Cari Hesap Ekstresi</h2>
+      <h2 className="section">{t('personelCariEkstreBaslik')}</h2>
       <div className="grid cols-3" style={{ marginTop: 10 }}>
         <div>
-          <label>Personel Seçiniz</label>
+          <label>{t('personelSeciniz')}</label>
           <select value={seciliPersonelNo} onChange={(e) => setSeciliPersonelNo(e.target.value)}>
             {personeller.map((p) => (
               <option key={p.personel_no} value={p.personel_no}>{p.ad} ({p.rol})</option>
@@ -3588,18 +3586,18 @@ function PersonelCariEkstreTab() {
           </select>
         </div>
         <div>
-          <label>Başlangıç Tarihi</label>
+          <label>{t('baslangicTarihi')}</label>
           <input type="date" value={baslangicTarih} onChange={(e) => setBaslangicTarih(e.target.value)} />
         </div>
         <div>
-          <label>Bitiş Tarihi</label>
+          <label>{t('bitisTarihi')}</label>
           <input type="date" value={bitisTarih} onChange={(e) => setBitisTarih(e.target.value)} />
         </div>
       </div>
 
       <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
         <button className="action btn-secondary" style={{ width: 'auto' }} onClick={pdfEkstreIndir} disabled={!ekstre}>
-          📄 PDF Ekstre İndir
+          {t('pdfEkstreIndir')}
         </button>
       </div>
 
@@ -3607,29 +3605,29 @@ function PersonelCariEkstreTab() {
         <>
           <div className="grid cols-4" style={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
             <div className="stat-card">
-              <div className="label">Brüt Saatlik Hakediş (+)</div>
+              <div className="label">{t('brutSaatlikHakedisArti')}</div>
               <div className="value">{formatPLN(ekstre.hakedisTutari)}</div>
-              <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{sureFormatla(ekstre.calisilanSaat)} ({ekstre.calisilanGun} gün mesai)</div>
+              <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{sureFormatlaLocale(ekstre.calisilanSaat)} ({ekstre.calisilanGun} {t('gunMesai')})</div>
             </div>
             <div className="stat-card">
-              <div className="label">Şantiye Masrafı (+)</div>
+              <div className="label">{t('santiyeMasrafiArti')}</div>
               <div className="value" style={{ color: '#16a34a' }}>+{formatPLN(ekstre.harcamalar)}</div>
             </div>
             <div className="stat-card">
-              <div className="label">Alınan Avans (-)</div>
+              <div className="label">{t('alinanAvansEksi')}</div>
               <div className="value" style={{ color: '#dc2626' }}>-{formatPLN(ekstre.avanslar)}</div>
             </div>
             <div className="stat-card" style={{ background: 'var(--accent-patron-soft)', borderColor: 'var(--accent-patron)' }}>
-              <div className="label" style={{ color: 'var(--accent-patron)' }}>Kalan Net Bakiye</div>
+              <div className="label" style={{ color: 'var(--accent-patron)' }}>{t('kalanNetBakiye')}</div>
               <div className="value" style={{ color: 'var(--accent-patron)' }}>{formatPLN(ekstre.netKalanBakiye)}</div>
             </div>
           </div>
 
-          <h3 style={{ fontSize: 14, margin: '20px 0 8px 0' }}>Dönem İçi Harcama, Avans ve Ödeme Dökümü</h3>
+          <h3 style={{ fontSize: 14, margin: '20px 0 8px 0' }}>{t('donemIciDokum')}</h3>
           <div style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch', marginTop: 10 }}>
             <table style={{ width: '100%', minWidth: 600 }}>
               <thead>
-                <tr><th>Tarih</th><th>İşlem Türü</th><th>Şantiye / Kasa</th><th>Tutar</th><th>Fiş / Belge</th><th>Açıklama</th></tr>
+                <tr><th>{t('tarih')}</th><th>{t('islemTuru')}</th><th>{t('santiyeKasa')}</th><th>{t('tutar')}</th><th>{t('fisBelge')}</th><th>{t('aciklama')}</th></tr>
               </thead>
               <tbody>
                 {ekstre.hareketler.map((m) => {
@@ -4523,8 +4521,8 @@ function PersonelYonetimiTab() {
               <div>
                 <label>{t('calismaDurumu')}</label>
                 <select value={form.durum} onChange={(e) => formGuncelle('durum', e.target.value)}>
-                  <option value="Aktif">🟢 Aktif Çalışıyor</option>
-                  <option value="Ayrıldı">🔴 İşten Ayrıldı / Çıkışı Verildi</option>
+                  <option value="Aktif">🟢 {t('aktifCalisiyor')}</option>
+                  <option value="Ayrıldı">🔴 {t('istenAyrildi')}</option>
                 </select>
               </div>
               {form.durum === 'Ayrıldı' && (
@@ -4543,10 +4541,10 @@ function PersonelYonetimiTab() {
 
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
               <button type="submit" className="action btn-punch" style={{ width: 'auto', padding: '10px 24px' }} disabled={kaydediliyor}>
-                {kaydediliyor ? 'Kaydediliyor...' : (duzenlenenId ? '💾 Değişiklikleri Kaydet' : '✓ Personeli Sisteme Kaydet')}
+                {kaydediliyor ? t('ekleniyor') : (duzenlenenId ? t('degisiklikleriKaydet') : t('personeliKaydet'))}
               </button>
               <button type="button" className="action btn-secondary" style={{ width: 'auto' }} onClick={() => setAltSekme('liste')}>
-                İptal
+                {t('iptal')}
               </button>
             </div>
           </form>
