@@ -308,16 +308,17 @@ function MesaiTab({ oturum, saat, tarihMetni, lokasyonAyarlandi }) {
       const bugunStr = new Date().toISOString().slice(0, 10);
       const girisGunStr = new Date(data.giris_saati).toISOString().slice(0, 10);
       if (girisGunStr < bugunStr) {
-        // Dünden veya önceki günlerden açık kalan mesai -> Otomatik 11 saat (18:00 çıkış) ile kapat
-        const otoCikis = new Date(girisGunStr + 'T18:00:00Z');
+        // Dünden veya önceki günlerden açık kalan mesai -> Otomatik 23:59 çıkış ve 8 saat normal çalışma ile kapat
+        const otoCikis = new Date(girisGunStr + 'T23:59:59Z');
         await supabase.from('giris_cikis').update({
           cikis_saati: otoCikis.toISOString(),
-          sure_saat: 11,
+          sure_saat: 8,
           durum: 'Kapalı'
         }).eq('id', data.id);
         acikMi = false;
         data.durum = 'Kapalı';
-        data.sure_saat = 11;
+        data.sure_saat = 8;
+        data.cikis_saati = otoCikis.toISOString();
       }
     }
 
@@ -1708,7 +1709,7 @@ function PersonelFinansTab({ oturum }) {
         const gunKey = new Date(m.giris_saati).toISOString().slice(0, 10);
         let sure = Number(m.sure_saat) || 0;
         if (m.durum === 'Açık') {
-          sure = gunKey < bugunStr ? 11 : Math.min(11, Math.round(Math.max(0, (new Date() - new Date(m.giris_saati)) / 3600000) * 100) / 100);
+          sure = gunKey < bugunStr ? 8 : Math.min(8, Math.round(Math.max(0, (new Date() - new Date(m.giris_saati)) / 3600000) * 100) / 100);
         }
         otomatikGunlukSaat[gunKey] = (otomatikGunlukSaat[gunKey] || 0) + sure;
       }

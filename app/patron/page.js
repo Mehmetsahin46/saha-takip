@@ -255,8 +255,25 @@ function GenelBakis({ onSekmeDegistir }) {
       const tm = harcamalar.reduce((a, v) => a + (Number(v.toplam) || 0), 0);
       setToplamMaliyet(tm);
 
-      // Aktif Sahadakiler
-      setIcerdekilerListesi(acikMesailer || []);
+      // Unutulmuş açık mesaileri 23:59 ve 8 saat normal mesai olarak otomatik kapat
+      const bugunBaslangic = new Date();
+      bugunBaslangic.setHours(0, 0, 0, 0);
+      const gecmisAciklar = (acikMesailer || []).filter(m => new Date(m.giris_saati) < bugunBaslangic);
+      if (gecmisAciklar.length > 0) {
+        for (const m of gecmisAciklar) {
+          const gStr = new Date(m.giris_saati).toISOString().slice(0, 10);
+          const otoCikis = new Date(gStr + 'T23:59:59Z');
+          supabase.from('giris_cikis').update({
+            cikis_saati: otoCikis.toISOString(),
+            sure_saat: 8,
+            durum: 'Kapalı'
+          }).eq('id', m.id);
+        }
+      }
+
+      // Aktif Sahadakiler (Sadece bugünkü açık olanlar)
+      const bugunkuAciklar = (acikMesailer || []).filter(m => new Date(m.giris_saati) >= bugunBaslangic);
+      setIcerdekilerListesi(bugunkuAciklar);
 
       // Kat edilen KM
       setToplamKm((araclar || []).reduce((a, v) => a + (Number(v.katedilen_km) || 0), 0));
@@ -273,7 +290,6 @@ function GenelBakis({ onSekmeDegistir }) {
 
       // Çalışma Süreleri
       const now = new Date();
-      const bugunBaslangic = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const haftaBaslangic = new Date(now);
       haftaBaslangic.setDate(now.getDate() - 7);
       const ayBaslangic = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -2125,10 +2141,16 @@ async function ayVerileriniGetir(yil, ay) {
   ]);
 
   const otomatikSaatMap = {};
+  const suanBugunStr = new Date().toISOString().slice(0, 10);
   (mesailer || []).forEach((m) => {
     const gunStr = new Date(m.giris_saati).toISOString().slice(0, 10);
     const key = m.personel_no + '|' + gunStr;
-    otomatikSaatMap[key] = (otomatikSaatMap[key] || 0) + (Number(m.sure_saat) || 0);
+    let sure = Number(m.sure_saat) || 0;
+    // Çıkış yapmayı unutan personel için geçmiş günlerde otomatik 8 saat normal mesai işle
+    if (m.durum === 'Açık' && gunStr < suanBugunStr) {
+      sure = 8;
+    }
+    otomatikSaatMap[key] = (otomatikSaatMap[key] || 0) + sure;
   });
 
   const manuelMap = {};

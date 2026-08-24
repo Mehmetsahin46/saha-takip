@@ -14,9 +14,10 @@ export default function LoginPage() {
   const [sifre, setSifre] = useState('');
   const [hata, setHata] = useState('');
   const [yukleniyor, setYukleniyor] = useState(false);
+  const [kayitliOturum, setKayitliOturum] = useState(null);
 
   useEffect(() => {
-    // Aktif oturum varsa otomatik yönlendir
+    // Aktif oturum varsa kullanıcıya göster (zorla yönlendirme yapma)
     const kayit = localStorage.getItem('aktifOturum');
     if (kayit) {
       try {
@@ -24,15 +25,14 @@ export default function LoginPage() {
         const now = Date.now();
         if (parsed.expires_at && now > parsed.expires_at) {
           localStorage.removeItem('aktifOturum');
-          return;
+        } else {
+          setKayitliOturum(parsed);
         }
-        if (parsed.rol === 'patron') router.push('/patron');
-        else if (parsed.rol === 'personel' || parsed.rol === 'formen') router.push('/personel');
       } catch (e) {
         localStorage.removeItem('aktifOturum');
       }
     }
-  }, [router]);
+  }, []);
 
   async function girisYap(e) {
     if (e) e.preventDefault();
@@ -66,6 +66,7 @@ export default function LoginPage() {
           { personel_no: '1001', sifre: '1234', ad: 'Mehmet Demir (Formen)', rol: 'formen', gunluk_ucret: 350 },
           { personel_no: '1002', sifre: '1234', ad: 'Ali Kaya (Usta)', rol: 'personel', gunluk_ucret: 250 },
           { personel_no: '1003', sifre: '1234', ad: 'Can Yılmaz (İşçi)', rol: 'personel', gunluk_ucret: 200 },
+          { personel_no: '9001', sifre: 'admin123', ad: 'Sistem Yöneticisi (Patron)', rol: 'patron', gunluk_ucret: 0 },
         ];
         kullanici = demoKullanicilar.find(
           (k) => k.personel_no === personelNo.trim() && k.sifre === sifre.trim()
@@ -105,7 +106,7 @@ export default function LoginPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, background: 'var(--bg)' }}>
       <div className="card" style={{ maxWidth: 430, width: '100%', padding: '32px 28px', borderRadius: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--accent-patron)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 16 }}>
               S
@@ -118,9 +119,36 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <h1 style={{ fontSize: 20, fontWeight: 800, marginBottom: 6, color: 'var(--ink)', letterSpacing: '-0.02em' }}>Sisteme Giriş Yap</h1>
-        <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 20 }}>
-          Şantiye ve personel yönetim paneline erişmek için kimlik bilgilerinizi girin.
+        {kayitliOturum && (
+          <div style={{ background: 'var(--bg-soft)', border: '1px solid var(--accent-patron)', borderRadius: 12, padding: 14, marginBottom: 18 }}>
+            <div style={{ fontSize: 11.5, color: 'var(--ink-soft)', fontWeight: 600 }}>CİHAZDA KAYITLI OTURUM:</div>
+            <div style={{ fontSize: 14, fontWeight: 700, margin: '4px 0 10px 0', color: 'var(--ink)' }}>
+              👤 {kayitliOturum.ad} <span style={{ fontSize: 11.5, color: 'var(--accent-patron)' }}>({kayitliOturum.rol === 'patron' ? 'Patron' : (kayitliOturum.rol === 'formen' ? 'Formen' : 'Personel')})</span>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                className="action btn-ai"
+                style={{ margin: 0, padding: '7px 14px', fontSize: 12, flex: 1 }}
+                onClick={() => router.push(kayitliOturum.rol === 'patron' ? '/patron' : '/personel')}
+              >
+                🚀 Devam Et
+              </button>
+              <button
+                type="button"
+                className="action btn-secondary"
+                style={{ margin: 0, padding: '7px 12px', fontSize: 11.5 }}
+                onClick={() => { localStorage.removeItem('aktifOturum'); setKayitliOturum(null); }}
+              >
+                ✕ Çıkış Yap
+              </button>
+            </div>
+          </div>
+        )}
+
+        <h1 style={{ fontSize: 18, fontWeight: 800, marginBottom: 4, color: 'var(--ink)', letterSpacing: '-0.02em' }}>Sisteme Giriş Yap</h1>
+        <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginBottom: 18 }}>
+          Şantiye ve personel yönetim paneline erişmek için bilgilerinizi girin.
         </div>
 
         <form onSubmit={girisYap}>
@@ -130,7 +158,7 @@ export default function LoginPage() {
             value={personelNo}
             onChange={(e) => setPersonelNo(e.target.value)}
             placeholder="Örn: 1001"
-            autoFocus
+            autoFocus={!kayitliOturum}
             style={{ marginBottom: 12 }}
           />
 
@@ -145,7 +173,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="action btn-ai"
+            className="action btn-punch"
             disabled={yukleniyor}
             style={{ fontSize: 14, padding: 12 }}
           >
@@ -155,7 +183,7 @@ export default function LoginPage() {
 
         {hata && <div className="feedback err" style={{ marginTop: 14 }}>{hata}</div>}
 
-        <div style={{ marginTop: 24, paddingTop: 18, borderTop: '1px solid var(--border)' }}>
+        <div style={{ marginTop: 22, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', marginBottom: 10, textAlign: 'center', letterSpacing: '0.04em' }}>
             HIZLI TEST GİRİŞLERİ
           </div>
@@ -163,7 +191,7 @@ export default function LoginPage() {
             <button
               type="button"
               className="action btn-secondary"
-              style={{ margin: 0, padding: '8px 10px', fontSize: 11.5 }}
+              style={{ margin: 0, padding: '7px 8px', fontSize: 11 }}
               onClick={() => hizliGiris('9001', 'admin123')}
             >
               Patron (9001)
@@ -171,7 +199,7 @@ export default function LoginPage() {
             <button
               type="button"
               className="action btn-secondary"
-              style={{ margin: 0, padding: '8px 10px', fontSize: 11.5 }}
+              style={{ margin: 0, padding: '7px 8px', fontSize: 11 }}
               onClick={() => hizliGiris('1001', '1234')}
             >
               Formen (1001)
@@ -179,7 +207,7 @@ export default function LoginPage() {
             <button
               type="button"
               className="action btn-secondary"
-              style={{ margin: 0, padding: '8px 10px', fontSize: 11.5 }}
+              style={{ margin: 0, padding: '7px 8px', fontSize: 11 }}
               onClick={() => hizliGiris('1002', '1234')}
             >
               Usta - Ali (1002)
@@ -187,7 +215,7 @@ export default function LoginPage() {
             <button
               type="button"
               className="action btn-secondary"
-              style={{ margin: 0, padding: '8px 10px', fontSize: 11.5 }}
+              style={{ margin: 0, padding: '7px 8px', fontSize: 11 }}
               onClick={() => hizliGiris('1003', '1234')}
             >
               İşçi - Can (1003)
@@ -198,4 +226,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
