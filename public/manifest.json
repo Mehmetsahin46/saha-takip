@@ -1,0 +1,24 @@
+{
+  "name": "Saha Takip — Şantiye & Personel Yönetimi",
+  "short_name": "Saha Takip",
+  "description": "İnşaat ve şantiye personel, mesai, puantaj, araç filosu ve harcama takip platformu",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#d97706",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

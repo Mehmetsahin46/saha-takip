@@ -1327,6 +1327,71 @@ function ProjelerTab() {
 /* ---------------- AYARLAR ---------------- */
 function Ayarlar() {
   const { t } = useLocale();
+  const [yedekleniyor, setYedekleniyor] = useState(false);
+
+  async function tumSistemiYedekle() {
+    setYedekleniyor(true);
+    try {
+      const [
+        { data: pList },
+        { data: lList },
+        { data: sList },
+        { data: gList },
+        { data: dList },
+        { data: eList },
+        { data: aList },
+        { data: kList },
+      ] = await Promise.all([
+        supabase.from('personel').select('*'),
+        supabase.from('lokasyonlar').select('*'),
+        supabase.from('saha_verileri').select('*'),
+        supabase.from('giris_cikis').select('*'),
+        supabase.from('santiye_defterleri').select('*'),
+        supabase.from('ekipmanlar').select('*'),
+        supabase.from('araclar').select('*'),
+        supabase.from('kalem_turleri').select('*'),
+      ]);
+
+      const yedekPaketi = {
+        yedekTarihi: new Date().toISOString(),
+        uygulama: 'Saha Takip 2.0 Pro',
+        kayitSayilari: {
+          personel: (pList || []).length,
+          saha_verileri: (sList || []).length,
+          mesai_hareketleri: (gList || []).length,
+          santiye_defterleri: (dList || []).length,
+          lokasyonlar: (lList || []).length,
+          ekipmanlar: (eList || []).length,
+          araclar: (aList || []).length,
+        },
+        veriler: {
+          personel: pList || [],
+          lokasyonlar: lList || [],
+          saha_verileri: sList || [],
+          giris_cikis: gList || [],
+          santiye_defterleri: dList || [],
+          ekipmanlar: eList || [],
+          araclar: aList || [],
+          kalem_turleri: kList || [],
+        },
+      };
+
+      const blob = new Blob([JSON.stringify(yedekPaketi, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const tarihStr = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `saha-takip-tam-yedek-${tarihStr}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Yedekleme sırasında hata oluştu: ' + err.message);
+    } finally {
+      setYedekleniyor(false);
+    }
+  }
   const [lokasyonlar, setLokasyonlar] = useState([]);
   const [kalemTurleri, setKalemTurleri] = useState([]);
   const [araclar, setAraclar] = useState([]);
@@ -1729,6 +1794,26 @@ function Ayarlar() {
           <input type="file" accept="image/*" onChange={(e) => setYeniResimDosya(e.target.files?.[0] || null)} />
           <button onClick={plakaEkle} disabled={ekleniyor} style={{ border: 'none', background: 'var(--accent-patron)', color: '#fff', borderRadius: 9, padding: '10px 0', fontWeight: 700, cursor: 'pointer' }}>
             {ekleniyor ? t('ekleniyor') : t('aracEkle')}
+          </button>
+        </div>
+      </div>
+
+      {/* 5. GÜVENLİK VE TAM SİSTEM YEDEKLEME */}
+      <div className="card" style={{ borderColor: 'var(--accent-patron)' }}>
+        <h2 className="section" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          💾 Güvenlik & Tam Veri Tabanı Yedekleme
+        </h2>
+        <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 4, marginBottom: 14 }}>
+          Tüm personel özlük kayıtları, saatlik mesai puantajları, şantiye faaliyet defterleri, kasa hareketleri ve araç envanterini tek tıkla şifreli/güvenli JSON yedeği olarak bilgisayarınıza veya telefonunuza indirin.
+        </div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button
+            onClick={tumSistemiYedekle}
+            disabled={yedekleniyor}
+            className="action btn-punch"
+            style={{ width: 'auto', margin: 0, padding: '10px 18px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}
+          >
+            {yedekleniyor ? '⏳ Yedek Paketi Hazırlanıyor...' : '📥 Tek Tıkla Tam Veritabanı Yedeğini İndir (.JSON)'}
           </button>
         </div>
       </div>
@@ -4203,7 +4288,20 @@ function PersonelYonetimiTab() {
                           </td>
                           <td style={{ fontSize: 11.5 }}>{o.tc_no || '—'}</td>
                           <td style={{ fontSize: 11.5 }}>
-                            <div>{o.telefon || '—'}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span>{o.telefon || '—'}</span>
+                              {o.telefon && (
+                                <a
+                                  href={`https://wa.me/${o.telefon.replace(/[^0-9]/g, '')}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  style={{ textDecoration: 'none', background: 'rgba(34, 197, 94, 0.15)', color: '#16a34a', padding: '2px 6px', borderRadius: 4, fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap' }}
+                                  title="WhatsApp ile İletişime Geç"
+                                >
+                                  💬 WA
+                                </a>
+                              )}
+                            </div>
                             {o.email && <div style={{ color: 'var(--ink-soft)' }}>{o.email}</div>}
                           </td>
                           <td style={{ fontSize: 11.5 }}>

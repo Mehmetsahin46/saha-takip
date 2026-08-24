@@ -4,6 +4,12 @@ import { LocaleProvider } from '@/lib/i18n';
 export const metadata = {
   title: 'Saha Takip — Şantiye & Personel Yönetim Sistemi',
   description: 'İnşaat ve şantiye yönetim, mesai, puantaj, araç filosu ve harcama takip platformu',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Saha Takip',
+  },
 };
 
 export const viewport = {
@@ -11,12 +17,18 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: '#d97706',
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="tr" suppressHydrationWarning>
       <head>
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" href="/icon-192.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/icon-192.svg" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
