@@ -2501,11 +2501,11 @@ function PuantajTab() {
       {yukleniyor || !gunBilgiFn ? (
         <div style={{ marginTop: 14, color: 'var(--ink-soft)' }}>Saatlik puantaj verileri yükleniyor...</div>
       ) : (
-        <div style={{ marginTop: 14, overflowX: 'auto' }}>
-          <table style={{ fontSize: 11, borderCollapse: 'collapse' }}>
+        <div className="table-scroll-container">
+          <table style={{ fontSize: 11 }}>
             <thead>
               <tr>
-                <th style={{ position: 'sticky', left: 0, zIndex: 5, background: 'var(--bg-soft)', minWidth: 140, textAlign: 'left', borderRight: '2px solid var(--border)' }}>Personel</th>
+                <th className="sticky-col-header" style={{ minWidth: 140, textAlign: 'left' }}>Personel</th>
                 {Array.from({ length: gunSayisi }, (_, i) => i + 1).map((gun) => {
                   const kontrol = puantajDuzenlemeKontrol(yil, ay, gun, yoneticiKilitsiz);
                   return (
@@ -2537,7 +2537,7 @@ function PuantajTab() {
 
                 return (
                   <tr key={p.personel_no}>
-                    <td style={{ position: 'sticky', left: 0, zIndex: 4, background: 'var(--card)', fontWeight: 600, whiteSpace: 'nowrap', borderRight: '2px solid var(--border)' }}>
+                    <td className="sticky-col-cell" style={{ minWidth: 140, fontWeight: 600, whiteSpace: 'nowrap' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span>{p.ad}</span>
                         {ayrildiMi && (
@@ -2999,11 +2999,11 @@ function HakedisTab() {
       {yukleniyor ? (
         <div style={{ marginTop: 14, color: 'var(--ink-soft)' }}>Yükleniyor...</div>
       ) : (
-        <div style={{ marginTop: 14, overflowX: 'auto' }}>
+        <div className="table-scroll-container">
           <table>
             <thead>
               <tr>
-                <th style={{ position: 'sticky', left: 0, zIndex: 5, background: 'var(--bg-soft)', minWidth: 150, borderRight: '2px solid var(--border)' }}>Personel</th>
+                <th className="sticky-col-header" style={{ minWidth: 150 }}>Personel</th>
                 <th>Görevi</th><th>Saatlik (PLN)</th><th>Çalışılan Süre</th><th>Çalışılan Gün</th><th>FM</th>
                 <th>Brüt Hakediş</th><th>Masraf (+)</th><th>Prim (+)</th><th>Avans (-)</th><th>Kesinti (-)</th><th>Net Kalan Maaş</th>
                 <th style={{ minWidth: 165 }}>İşlemler</th>
@@ -3012,7 +3012,7 @@ function HakedisTab() {
             <tbody>
               {satirlar.map((s) => (
                 <tr key={s.personel_no}>
-                  <td style={{ position: 'sticky', left: 0, zIndex: 4, background: 'var(--card)', minWidth: 150, borderRight: '2px solid var(--border)' }}>
+                  <td className="sticky-col-cell" style={{ minWidth: 150 }}>
                     <b>{s.ad}</b>
                     <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{s.personel_no}</div>
                   </td>
@@ -3296,11 +3296,11 @@ function AvansPrimTab() {
         {yukleniyor ? (
           <div style={{ color: 'var(--ink-soft)' }}>Yükleniyor...</div>
         ) : (
-          <div style={{ maxHeight: 420, overflowY: 'auto' }}>
+          <div className="table-scroll-container" style={{ maxHeight: 440, overflowY: 'auto' }}>
             <table style={{ minWidth: 600 }}>
               <thead>
                 <tr>
-                  <th style={{ position: 'sticky', left: 0, zIndex: 6, background: 'var(--bg-soft)', minWidth: 140, borderRight: '2px solid var(--border)' }}>Personel</th>
+                  <th className="sticky-col-header" style={{ minWidth: 140 }}>Personel</th>
                   <th>Tarih</th>
                   <th>Tür</th>
                   <th>Tutar</th>
@@ -3313,7 +3313,7 @@ function AvansPrimTab() {
                   const kat = getIslemKategori(k);
                   return (
                     <tr key={k.id}>
-                      <td style={{ position: 'sticky', left: 0, zIndex: 5, background: 'var(--card)', minWidth: 140, borderRight: '2px solid var(--border)' }}>
+                      <td className="sticky-col-cell" style={{ minWidth: 140 }}>
                         <b>{k.ad}</b>
                         <div style={{ fontSize: 10, color: 'var(--ink-soft)' }}>{k.personel_no || ''}</div>
                       </td>
@@ -4133,11 +4133,11 @@ function PersonelYonetimiTab() {
             {yukleniyor ? (
               <div style={{ color: 'var(--ink-soft)', padding: 14 }}>Personel kayıtları yükleniyor...</div>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
+              <div className="table-scroll-container">
                 <table>
                   <thead>
                     <tr>
-                      <th style={{ position: 'sticky', left: 0, zIndex: 6, background: 'var(--bg-soft)', minWidth: 160, borderRight: '2px solid var(--border)' }}>Personel / Sicil</th>
+                      <th className="sticky-col-header" style={{ minWidth: 160 }}>Personel / Sicil</th>
                       <th>Görevi & Şantiye</th>
                       <th>Saatlik Ücret</th>
                       <th>Yıllık İzin (Kalan / Hak)</th>
@@ -4155,7 +4155,7 @@ function PersonelYonetimiTab() {
                       const kalan = Math.max(0, toplamHak - kullanilan);
                       return (
                         <tr key={p.id}>
-                          <td style={{ position: 'sticky', left: 0, zIndex: 5, background: 'var(--card)', minWidth: 160, borderRight: '2px solid var(--border)' }}>
+                          <td className="sticky-col-cell" style={{ minWidth: 160 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                               <b>{p.ad}</b>
                               {o.durum === 'Ayrıldı' && (
