@@ -1808,8 +1808,8 @@ function PersonelFinansTab({ oturum }) {
   return (
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
-        <h2 className="section" style={{ margin: 0 }}>💰 Aylık Hakediş ve Avans Durumum</h2>
-        <button className="action btn-secondary" style={{ width: 'auto', margin: 0, padding: '7px 14px', fontSize: 12 }} onClick={bordroPdfIndir} disabled={!bilgi}>📄 Resmi Bordro PDF İndir</button>
+        <h2 className="section" style={{ margin: 0 }}>{t('aylikHakedisDurumum')}</h2>
+        <button className="action btn-secondary" style={{ width: 'auto', margin: 0, padding: '7px 14px', fontSize: 12 }} onClick={bordroPdfIndir} disabled={!bilgi}>{t('resmiBordroPdf')}</button>
       </div>
       <div className="grid cols-2" style={{ marginTop: 10 }}>
         <div>
@@ -1830,27 +1830,27 @@ function PersonelFinansTab({ oturum }) {
         <>
           <div className="grid cols-4" style={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
             <div className="stat-card">
-              <div className="label">Bu Ayki Saatlik Hakediş (+)</div>
+              <div className="label">{t('buAykiSaatlikHakedis')}</div>
               <div className="value">{formatPLN(bilgi.hakedisTutari)}</div>
               <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>
                 <b style={{ color: 'var(--accent-personel)' }}>{sureFormatla(bilgi.calisilanSaat)}</b> ({formatPLN(bilgi.saatlikUcret)}/sa · {bilgi.calisilanGun} gün)
               </div>
             </div>
             <div className="stat-card">
-              <div className="label">Şantiye Masraflarım (+)</div>
+              <div className="label">{t('santiyeMasraflarim')}</div>
               <div className="value" style={{ color: '#16a34a' }}>+{formatPLN(bilgi.toplamMasraf)}</div>
             </div>
             <div className="stat-card">
-              <div className="label">Aldığım Avanslar (-)</div>
+              <div className="label">{t('aldigimAvanslar')}</div>
               <div className="value" style={{ color: '#dc2626' }}>-{formatPLN(bilgi.toplamAvans)}</div>
             </div>
             <div className="stat-card" style={{ background: 'var(--accent-personel-soft)', borderColor: 'var(--accent-personel)' }}>
-              <div className="label" style={{ color: 'var(--accent-personel)' }}>Net Kalan Maaş Alacağım</div>
+              <div className="label" style={{ color: 'var(--accent-personel)' }}>{t('netKalanMaasAlacagim')}</div>
               <div className="value" style={{ color: 'var(--accent-personel)' }}>{formatPLN(bilgi.netKalan)}</div>
             </div>
           </div>
 
-          <h3 style={{ fontSize: 14, margin: '20px 0 8px 0' }}>Dönem Finansal Hareketleri (Avans, Harcama, Prim)</h3>
+          <h3 style={{ fontSize: 14, margin: '20px 0 8px 0' }}>{t('donemFinansalHareketleri')}</h3>
           <div style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch', marginTop: 10 }}>
             <table style={{ width: '100%', minWidth: 550 }}>
               <thead>
@@ -1887,6 +1887,7 @@ function PersonelFinansTab({ oturum }) {
 
 /* ---------------- PERSONEL İZİN & AVANS TALEP TAB ---------------- */
 function PersonelIzinTab({ oturum }) {
+  const { t } = useLocale();
   const [altSekme, setAltSekme] = useState('izin'); // 'izin' | 'avans'
   const [izinTalepler, setIzinTalepler] = useState([]);
   const [avansTalepler, setAvansTalepler] = useState([]);

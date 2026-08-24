@@ -167,17 +167,17 @@ export default function PatronPanel() {
         </div>
       </div>
       <div className="tabbar">
-        <button className={tab === 'genel' ? 'active-patron' : ''} onClick={() => setTab('genel')}>📊 Genel Bakış</button>
+        <button className={tab === 'genel' ? 'active-patron' : ''} onClick={() => setTab('genel')}>{t('sekmeGenelBakis')}</button>
         <button className={tab === 'araclar' ? 'active-patron' : ''} onClick={() => setTab('araclar')}>{t('sekmeAracFilosu')}</button>
-        <button className={tab === 'depoEkipman' ? 'active-patron' : ''} onClick={() => setTab('depoEkipman')}>📦 {t('sekmeDepoEkipman') || 'Depo & Ekipman'}</button>
+        <button className={tab === 'depoEkipman' ? 'active-patron' : ''} onClick={() => setTab('depoEkipman')}>{t('sekmeDepoEkipman')}</button>
         <button className={tab === 'gorevler' ? 'active-patron' : ''} onClick={() => setTab('gorevler')}>{t('sekmeGorevler')}</button>
         <button className={tab === 'defter' ? 'active-patron' : ''} onClick={() => setTab('defter')}>
-          📋 Günlük Faaliyet Raporu{yeniRaporSayisi > 0 ? ' (' + yeniRaporSayisi + ')' : ''}
+          {t('sekmeGunlukFaaliyet')}{yeniRaporSayisi > 0 ? ' (' + yeniRaporSayisi + ')' : ''}
         </button>
-        <button className={tab === 'finans' ? 'active-patron' : ''} onClick={() => setTab('finans')}>💰 Finans</button>
-        <button className={tab === 'personelDefteri' ? 'active-patron' : ''} onClick={() => setTab('personelDefteri')}>👷 Personel</button>
+        <button className={tab === 'finans' ? 'active-patron' : ''} onClick={() => setTab('finans')}>{t('sekmeFinans')}</button>
+        <button className={tab === 'personelDefteri' ? 'active-patron' : ''} onClick={() => setTab('personelDefteri')}>{t('sekmePersonel')}</button>
         <button className={tab === 'projeler' ? 'active-patron' : ''} onClick={() => setTab('projeler')}>{t('sekmeProjeler')}</button>
-        <button className={tab === 'teklifler' ? 'active-patron' : ''} onClick={() => setTab('teklifler')}>📝 Lokasyon & AI Teklif</button>
+        <button className={tab === 'teklifler' ? 'active-patron' : ''} onClick={() => setTab('teklifler')}>{t('sekmeTeklifler')}</button>
         <button className={tab === 'ayarlar' ? 'active-patron' : ''} onClick={() => setTab('ayarlar')}>{t('sekmeAyarlar')}</button>
       </div>
       <div className="content">
@@ -2318,22 +2318,23 @@ const HAFTA_KISALTMA = ['Paz', 'Pzt', 'Sal', 'Çrş', 'Prş', 'Cum', 'Cmt'];
    FİNANS — Puantaj + Aylık Hakediş + Çalışma Defteri + Avans & Prim + Cari Ekstre
    ================================================================== */
 function FinansTab() {
+  const { t } = useLocale();
   const [altSekme, setAltSekme] = useState('puantaj');
 
   return (
     <div>
       <div className="tabbar" style={{ marginBottom: 14 }}>
         <button className={altSekme === 'puantaj' ? 'active-patron' : ''} onClick={() => setAltSekme('puantaj')}>
-          🕒 Puantaj Matrisi (Saatlik)
+          {t('puantajMatrisi')}
         </button>
         <button className={altSekme === 'hakedis' ? 'active-patron' : ''} onClick={() => setAltSekme('hakedis')}>
-          💰 Aylık Hakediş & Maaş Kapatma
+          {t('aylikHakedisKapatma')}
         </button>
         <button className={altSekme === 'avans' ? 'active-patron' : ''} onClick={() => setAltSekme('avans')}>
-          💵 Avans & Prim Yönetimi
+          {t('avansPrimYonetimi')}
         </button>
         <button className={altSekme === 'ekstre' ? 'active-patron' : ''} onClick={() => setAltSekme('ekstre')}>
-          📄 Personel Cari Ekstresi
+          {t('personelCariEkstre')}
         </button>
       </div>
       {altSekme === 'puantaj' && <PuantajTab />}
@@ -2390,6 +2391,7 @@ function puantajDuzenlemeKontrol(yil, ay, gun, patronKilitsiz = false) {
 
 /* ---------------- PUANTAJ (Saatlik Aylık Matris & Seçim Kutusu) ---------------- */
 function PuantajTab() {
+  const { t, aylar, haftaGunleri } = useLocale();
   const now = new Date();
   const [yil, setYil] = useState(now.getFullYear());
   const [ay, setAy] = useState(now.getMonth() + 1);
@@ -2625,7 +2627,7 @@ function PuantajTab() {
           <table style={{ fontSize: 11 }}>
             <thead>
               <tr>
-                <th className="sticky-col-header" style={{ minWidth: 140, textAlign: 'left' }}>Personel</th>
+                <th className="sticky-col-header" style={{ minWidth: 140, textAlign: 'left' }}>{t('personel')}</th>
                 {Array.from({ length: gunSayisi }, (_, i) => i + 1).map((gun) => {
                   const kontrol = puantajDuzenlemeKontrol(yil, ay, gun, yoneticiKilitsiz);
                   return (
@@ -2642,9 +2644,9 @@ function PuantajTab() {
                     </th>
                   );
                 })}
-                <th style={{ padding: '3px 8px', background: 'var(--accent-patron-soft)', color: 'var(--accent-patron)', fontWeight: 800 }}>Toplam Süre</th>
-                <th style={{ padding: '3px 6px' }}>Çalışılan Gün</th>
-                <th style={{ padding: '3px 8px', background: 'rgba(245, 158, 11, 0.12)', color: '#b45309', fontWeight: 800 }}>⚡ Fazla Mesai (FM)</th>
+                <th style={{ padding: '3px 8px', background: 'var(--accent-patron-soft)', color: 'var(--accent-patron)', fontWeight: 800 }}>{t('toplamSure')}</th>
+                <th style={{ padding: '3px 6px' }}>{t('calisilanGun')}</th>
+                <th style={{ padding: '3px 8px', background: 'rgba(245, 158, 11, 0.12)', color: '#b45309', fontWeight: 800 }}>{t('fazlaMesaiFm')}</th>
               </tr>
             </thead>
             <tbody>
@@ -2937,6 +2939,7 @@ function formatIslemAciklama(row) {
 
 /* ---------------- AYLIK PERSONEL HAKEDİŞİ & MAAŞ KAPATMA ---------------- */
 function HakedisTab() {
+  const { t, aylar } = useLocale();
   const now = new Date();
   const [yil, setYil] = useState(now.getFullYear());
   const [ay, setAy] = useState(now.getMonth() + 1);
@@ -3465,6 +3468,7 @@ function AvansPrimTab() {
 
 /* ---------------- PERSONEL CARİ HESAP EKSTRESİ ---------------- */
 function PersonelCariEkstreTab() {
+  const { t } = useLocale();
   const now = new Date();
   const ayBasi = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
   const bugun = now.toISOString().slice(0, 10);
@@ -3661,6 +3665,7 @@ function PersonelCariEkstreTab() {
    PERSONEL YÖNETİMİ & ÖZLÜK SİSTEMİ
    ================================================================== */
 function PersonelYonetimiTab() {
+  const { t } = useLocale();
   const [altSekme, setAltSekme] = useState('liste'); // 'liste' | 'yeni' | 'izinler'
   const [personeller, setPersoneller] = useState([]);
   const [lokasyonlar, setLokasyonlar] = useState([]);
@@ -4155,20 +4160,20 @@ function PersonelYonetimiTab() {
           className={'chip' + (altSekme === 'liste' ? ' sel' : '')}
           onClick={() => { setAltSekme('liste'); setMesaj(null); }}
         >
-          👥 Personel Listesi & Kartlar ({personeller.length})
+          {t('personelListesiKartlar')} ({personeller.length})
         </span>
         <span
           className={'chip' + (altSekme === 'yeni' ? ' sel' : '')}
           onClick={() => { formuTemizle(); setAltSekme('yeni'); setMesaj(null); }}
         >
-          ➕ {duzenlenenId ? '✏️ Personel Düzenle' : 'Yeni Personel Ekle'}
+          {duzenlenenId ? t('personelDuzenle') : t('yeniPersonelEkle')}
         </span>
         <span
           className={'chip' + (altSekme === 'izinler' ? ' sel' : '')}
           style={{ position: 'relative' }}
           onClick={() => { setAltSekme('izinler'); setMesaj(null); }}
         >
-          🏖️💵 İzin & Avans Talepleri
+          {t('izinAvansTalepleri')}
           {(bekleyenIzinSayisi + bekleyenAvansSayisi) > 0 && (
             <span style={{ marginLeft: 6, background: '#ef4444', color: '#fff', padding: '1px 6px', borderRadius: 10, fontSize: 10, fontWeight: 700 }}>
               {bekleyenIzinSayisi + bekleyenAvansSayisi} Bekliyor
@@ -4257,15 +4262,15 @@ function PersonelYonetimiTab() {
                 <table>
                   <thead>
                     <tr>
-                      <th className="sticky-col-header">Personel / Sicil</th>
-                      <th>Görevi & Şantiye</th>
-                      <th>Saatlik Ücret</th>
-                      <th>Yaş / D.Tarihi</th>
-                      <th>Yıllık İzin (Kalan / Hak)</th>
-                      <th>Kimlik / T.C. No</th>
-                      <th>İletişim (Telefon / E-posta)</th>
-                      <th>İşe Giriş</th>
-                      <th style={{ minWidth: 90 }}>İşlemler</th>
+                      <th className="sticky-col-header">{t('personelSicil')}</th>
+                      <th>{t('goreviSantiye')}</th>
+                      <th>{t('ucretSaat')}</th>
+                      <th>{t('yas')}</th>
+                      <th>{t('yillikIzinKalanHak')}</th>
+                      <th>{t('kimlikTcNo')}</th>
+                      <th>{t('iletisimTelEmail')}</th>
+                      <th>{t('iseGiris')}</th>
+                      <th style={{ minWidth: 90 }}>{t('islemler')}</th>
                     </tr>
                   </thead>
                   <tbody>
