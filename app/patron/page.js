@@ -56,7 +56,6 @@ export default function PatronPanel() {
   const { t } = useLocale();
   const [oturum, setOturum] = useState(null);
   const [tab, setTab] = useState('genel');
-  const [tema, setTema] = useState('light');
   const [yeniRaporSayisi, setYeniRaporSayisi] = useState(0);
   const [bildirimKutusuAcik, setBildirimKutusuAcik] = useState(false);
   const [yeniRaporlar, setYeniRaporlar] = useState([]);
@@ -72,12 +71,6 @@ export default function PatronPanel() {
       router.push('/');
     }
   }, [router]);
-
-  useEffect(() => {
-    const baslangicTema = getInitialTheme();
-    setTema(baslangicTema);
-    temaUygula(baslangicTema);
-  }, []);
 
   const defterBildirimYukle = useCallback(async () => {
     const { data } = await supabase.from('santiye_defterleri').select('*').eq('durum', 'Yeni').order('created_at', { ascending: false });
@@ -123,6 +116,7 @@ export default function PatronPanel() {
         <span className="who">{t('yonetimPaneli')} — <b>{t('rolPatron')}</b></span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
           <DilSecici />
+          <ThemeToggle />
           <button
             onClick={() => setBildirimKutusuAcik(!bildirimKutusuAcik)}
             style={{ position: 'relative', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', borderRadius: 9, padding: '7px 10px', cursor: 'pointer', fontSize: 15 }}
@@ -156,7 +150,6 @@ export default function PatronPanel() {
               )}
             </div>
           )}
-          <button className="theme-toggle" onClick={() => setTema(temaDegistir(tema))}>{tema === 'dark' ? '☀️' : '🌙'}</button>
           <button className="logout" onClick={cikisYapOturum}>{t('cikis')}</button>
         </div>
       </div>
