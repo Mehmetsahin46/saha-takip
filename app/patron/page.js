@@ -3134,8 +3134,7 @@ function HakedisTab() {
               {satirlar.map((s) => (
                 <tr key={s.personel_no}>
                   <td className="sticky-col-cell">
-                    <span className="personel-name" title={s.ad}>{s.ad}</span>
-                    <div className="personel-sub">{s.personel_no} · {formatRol(s.rol)}</div>
+                    <span className="personel-name" title={s.ad} style={{ fontWeight: 700 }}>{s.ad}</span>
                   </td>
                   <td>{formatRol(s.rol)}</td>
                   <td>{formatPLN(s.saatlikUcret)}/sa</td>
