@@ -2209,9 +2209,6 @@ function FinansTab() {
         <button className={altSekme === 'hakedis' ? 'active-patron' : ''} onClick={() => setAltSekme('hakedis')}>
           💰 Aylık Hakediş & Maaş Kapatma
         </button>
-        <button className={altSekme === 'defter' ? 'active-patron' : ''} onClick={() => setAltSekme('defter')}>
-          📋 Dönemsel Çalışma Defteri
-        </button>
         <button className={altSekme === 'avans' ? 'active-patron' : ''} onClick={() => setAltSekme('avans')}>
           💵 Avans & Prim Yönetimi
         </button>
@@ -2221,7 +2218,6 @@ function FinansTab() {
       </div>
       {altSekme === 'puantaj' && <PuantajTab />}
       {altSekme === 'hakedis' && <HakedisTab />}
-      {altSekme === 'defter' && <PersonelDefteriTab />}
       {altSekme === 'avans' && <AvansPrimTab />}
       {altSekme === 'ekstre' && <PersonelCariEkstreTab />}
     </div>
@@ -3301,32 +3297,42 @@ function AvansPrimTab() {
           <div style={{ color: 'var(--ink-soft)' }}>Yükleniyor...</div>
         ) : (
           <div style={{ maxHeight: 420, overflowY: 'auto' }}>
-            <table>
+            <table style={{ minWidth: 600 }}>
               <thead>
-                <tr><th>Tarih</th><th>Personel</th><th>Tür</th><th>Tutar</th><th>Açıklama</th><th></th></tr>
+                <tr>
+                  <th style={{ position: 'sticky', left: 0, zIndex: 6, background: 'var(--bg-soft)', minWidth: 140, borderRight: '2px solid var(--border)' }}>Personel</th>
+                  <th>Tarih</th>
+                  <th>Tür</th>
+                  <th>Tutar</th>
+                  <th>Açıklama</th>
+                  <th>İşlem</th>
+                </tr>
               </thead>
               <tbody>
                 {gosterilenler.map((k) => {
                   const kat = getIslemKategori(k);
                   return (
                     <tr key={k.id}>
-                      <td style={{ fontSize: 11 }}>{new Date(k.tarih || k.created_at).toLocaleDateString('tr-TR')}</td>
-                      <td><b>{k.ad}</b></td>
+                      <td style={{ position: 'sticky', left: 0, zIndex: 5, background: 'var(--card)', minWidth: 140, borderRight: '2px solid var(--border)' }}>
+                        <b>{k.ad}</b>
+                        <div style={{ fontSize: 10, color: 'var(--ink-soft)' }}>{k.personel_no || ''}</div>
+                      </td>
+                      <td style={{ fontSize: 11.5, whiteSpace: 'nowrap' }}>{new Date(k.tarih || k.created_at).toLocaleDateString('tr-TR')}</td>
                       <td>
                         <span className={`status-tag ${kat === 'prim' ? 'open' : ''}`}>
-                          {kat === 'avans' ? '💵 Avans' : (kat === 'prim' ? '🎁 Prim' : (kat === 'kesinti' ? '⚠️ Kesinti' : (kat === 'maas_odeme' ? '💰 Maaş' : '🧾 Masraf')))}
+                          {kat === 'avans' ? 'Avans' : (kat === 'prim' ? 'Prim' : (kat === 'kesinti' ? 'Kesinti' : (kat === 'maas_odeme' ? 'Maaş' : 'Masraf')))}
                         </span>
                       </td>
                       <td><b>{formatPLN(k.toplam)}</b></td>
-                      <td style={{ fontSize: 11, color: 'var(--ink-soft)', maxWidth: 260 }}>{formatIslemAciklama(k)}</td>
+                      <td style={{ fontSize: 11.5, color: 'var(--ink-soft)', maxWidth: 260 }}>{formatIslemAciklama(k)}</td>
                       <td>
-                        <button onClick={() => kayitSil(k.id)} style={{ border: 'none', background: 'rgba(220, 38, 38, 0.14)', color: '#ef4444', borderRadius: 6, padding: '3px 6px', fontSize: 11, cursor: 'pointer' }}>Sil</button>
+                        <button onClick={() => kayitSil(k.id)} style={{ border: 'none', background: 'rgba(220, 38, 38, 0.14)', color: '#ef4444', borderRadius: 6, padding: '4px 8px', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}>Sil</button>
                       </td>
                     </tr>
                   );
                 })}
                 {gosterilenler.length === 0 && (
-                  <tr><td colSpan={6} style={{ color: 'var(--ink-soft)' }}>Kayıt bulunamadı.</td></tr>
+                  <tr><td colSpan={6} style={{ color: 'var(--ink-soft)', padding: 14 }}>Kayıt bulunamadı.</td></tr>
                 )}
               </tbody>
             </table>
@@ -4131,15 +4137,14 @@ function PersonelYonetimiTab() {
                 <table>
                   <thead>
                     <tr>
-                      <th>Personel / Sicil</th>
+                      <th style={{ position: 'sticky', left: 0, zIndex: 6, background: 'var(--bg-soft)', minWidth: 160, borderRight: '2px solid var(--border)' }}>Personel / Sicil</th>
                       <th>Görevi & Şantiye</th>
                       <th>Saatlik Ücret</th>
                       <th>Yıllık İzin (Kalan / Hak)</th>
                       <th>Kimlik / T.C. No</th>
                       <th>İletişim (Telefon / E-posta)</th>
-                      <th>Banka & IBAN</th>
                       <th>İşe Giriş</th>
-                      <th>İşlemler</th>
+                      <th style={{ minWidth: 100 }}>İşlemler</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -4150,7 +4155,7 @@ function PersonelYonetimiTab() {
                       const kalan = Math.max(0, toplamHak - kullanilan);
                       return (
                         <tr key={p.id}>
-                          <td>
+                          <td style={{ position: 'sticky', left: 0, zIndex: 5, background: 'var(--card)', minWidth: 160, borderRight: '2px solid var(--border)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                               <b>{p.ad}</b>
                               {o.durum === 'Ayrıldı' && (
@@ -4174,16 +4179,12 @@ function PersonelYonetimiTab() {
                             </div>
                             <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>({kullanilan} gün kullanıldı)</div>
                           </td>
-                          <td style={{ fontSize: 11 }}>{o.tc_no || '—'}</td>
-                          <td style={{ fontSize: 11 }}>
+                          <td style={{ fontSize: 11.5 }}>{o.tc_no || '—'}</td>
+                          <td style={{ fontSize: 11.5 }}>
                             <div>{o.telefon || '—'}</div>
                             {o.email && <div style={{ color: 'var(--ink-soft)' }}>{o.email}</div>}
                           </td>
-                          <td style={{ fontSize: 11 }}>
-                            <div><b>{o.banka_adi || '—'}</b></div>
-                            <div style={{ color: 'var(--ink-soft)', fontFamily: 'monospace' }}>{o.iban || '—'}</div>
-                          </td>
-                          <td style={{ fontSize: 11 }}>
+                          <td style={{ fontSize: 11.5 }}>
                             <div>{o.ise_giris_tarihi || '—'}</div>
                             {o.durum === 'Ayrıldı' && <div style={{ color: '#ef4444', fontSize: 10, marginTop: 2 }}>Çıkış: {o.isten_ayrilis_tarihi || '—'}</div>}
                           </td>
