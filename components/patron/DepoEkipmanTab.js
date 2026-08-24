@@ -549,16 +549,16 @@ export default function DepoEkipmanTab() {
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16, borderBottom: '1px solid var(--border)', paddingBottom: 12, justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <button className={`ekp-tab-btn ${altSekme === 'genel' ? 'aktif' : ''}`} onClick={() => setAltSekme('genel')}>
-            📊 Genel Bakış
+            📊 {t('genelBakis')}
           </button>
           <button className={`ekp-tab-btn ${altSekme === 'ekipmanlar' ? 'aktif' : ''}`} onClick={() => setAltSekme('ekipmanlar')}>
             🛠️ Ekipmanlar ({ekipmanlar.length})
           </button>
           <button className={`ekp-tab-btn ${altSekme === 'depolar' ? 'aktif' : ''}`} onClick={() => setAltSekme('depolar')}>
-            🏢 Depolar ({depolar.length})
+            🏢 {t('depolar')} ({depolar.length})
           </button>
           <button className={`ekp-tab-btn ${altSekme === 'hareketler' ? 'aktif' : ''}`} onClick={() => setAltSekme('hareketler')}>
-            📋 Ekipman Hareketleri
+            📋 {t('ekipmanHareketleri')}
           </button>
           <button className={`ekp-tab-btn ${altSekme === 'bakim' ? 'aktif' : ''}`} onClick={() => setAltSekme('bakim')}>
             🔧 Bakım & Arıza ({arizalar.filter(a => a.durum === 'Açık').length} Arıza)
@@ -589,7 +589,7 @@ export default function DepoEkipmanTab() {
               setYeniEkipmanModal(true);
             }}
           >
-            + Yeni Ekipman Tanımla
+            {t('yeniEkipmanTanimla')}
           </button>
         </div>
       </div>
@@ -631,14 +631,14 @@ export default function DepoEkipmanTab() {
             {/* Sol: Son Ekipman Hareketleri */}
             <div className="card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800 }}>⚡ Son Ekipman Hareketleri</h3>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800 }}>⚡ {t('sonEkipmanHareketleri')}</h3>
                 <button className="action btn-secondary" style={{ width: 'auto', fontSize: 11, padding: '4px 8px' }} onClick={() => setAltSekme('hareketler')}>
-                  Tümünü Gör →
+                  {t('tumunuGor')}
                 </button>
               </div>
 
               {hareketler.length === 0 ? (
-                <div style={{ color: 'var(--ink-soft)', fontSize: 13, padding: '20px 0', textAlign: 'center' }}>Henüz bir hareket kaydı bulunmuyor.</div>
+                <div style={{ color: 'var(--ink-soft)', fontSize: 13, padding: '20px 0', textAlign: 'center' }}>{t('henuzHareketYok')}</div>
               ) : (
                 <div style={{ display: 'grid', gap: 8, maxHeight: 360, overflowY: 'auto' }}>
                   {hareketler.slice(0, 8).map((h) => (
@@ -660,9 +660,9 @@ export default function DepoEkipmanTab() {
 
             {/* Sağ: Aktif Sahadaki Ekipmanlar ve Zimmetliler */}
             <div className="card">
-              <h3 style={{ margin: '0 0 10px 0', fontSize: 15, fontWeight: 800 }}>📍 Şantiyelerde Çalışan Ekipmanlar</h3>
+              <h3 style={{ margin: '0 0 10px 0', fontSize: 15, fontWeight: 800 }}>📍 {t('santiyelerdeCalisanEkipmanlar')}</h3>
               {ekipmanlar.filter(e => e.durum === 'Kullanımda' || e.mevcut_lokasyon).length === 0 ? (
-                <div style={{ color: 'var(--ink-soft)', fontSize: 13, padding: '20px 0', textAlign: 'center' }}>Şu anda şantiyelerde aktif ekipman bulunmuyor. Tüm aletler depoda.</div>
+                <div style={{ color: 'var(--ink-soft)', fontSize: 13, padding: '20px 0', textAlign: 'center' }}>{t('santiyedeEkipmanYok')}</div>
               ) : (
                 <div style={{ display: 'grid', gap: 8, maxHeight: 360, overflowY: 'auto' }}>
                   {ekipmanlar.filter(e => e.durum === 'Kullanımda' || e.mevcut_lokasyon).map((e) => (

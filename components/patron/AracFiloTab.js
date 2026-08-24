@@ -12,7 +12,7 @@ function formatPLN(deger) {
 }
 
 export default function AracFiloTab() {
-  const { t } = useLocale();
+  const { t, sureFormatlaLocale } = useLocale();
   const [araclar, setAraclar] = useState([]);
   const [kayitlar, setKayitlar] = useState([]);
   const [seciliPlaka, setSeciliPlaka] = useState(null);
@@ -157,7 +157,7 @@ export default function AracFiloTab() {
                       🔧 Muayene (Przegląd): {info.metin}
                     </div>
                   ) : (
-                    <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>🔧 Muayene tarihi girilmedi</div>
+                    <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>🔧 {t('muayeneTarihiGirilmedi')}</div>
                   )}
 
                   {editInspectionPlaka === a.plaka ? (
@@ -181,7 +181,7 @@ export default function AracFiloTab() {
                         setSonrakiMuayeneVal(a.sonraki_muayene_tarihi || '');
                       }}
                     >
-                      📝 Muayene Tarihini Güncelle
+                      📝 {t('muayeneTarihiniGuncelle')}
                     </button>
                   )}
                 </div>
@@ -202,16 +202,16 @@ export default function AracFiloTab() {
         </h2>
         <div className="grid cols-3" style={{ marginTop: 8 }}>
           <div>
-            <label>Başlangıç tarihi</label>
+            <label>{t('baslangicTarihi')}</label>
             <input type="date" value={baslangicTarih} onChange={(e) => setBaslangicTarih(e.target.value)} />
           </div>
           <div>
-            <label>Bitiş tarihi</label>
+            <label>{t('bitisTarihi')}</label>
             <input type="date" value={bitisTarih} onChange={(e) => setBitisTarih(e.target.value)} />
           </div>
           <div>
-            <label>Personel filtrele</label>
-            <input placeholder="İsim ile ara..." value={personelArama} onChange={(e) => setPersonelArama(e.target.value)} />
+            <label>{t('personelFiltrele')}</label>
+            <input placeholder={t('isimIleAra')} value={personelArama} onChange={(e) => setPersonelArama(e.target.value)} />
           </div>
         </div>
         <table>

@@ -446,10 +446,10 @@ function GenelBakis({ onSekmeDegistir }) {
       <div className="grid cols-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 14 }}>
         {/* SOL: ŞU AN SAHADA OLANLAR */}
         <div className="card">
-          <h2 className="section" style={{ margin: '0 0 10px 0' }}>📍 Sahada Çalışan Personeller ({icerdekilerListesi.length})</h2>
+          <h2 className="section" style={{ margin: '0 0 10px 0' }}>📍 {t('sahadaCalisanPersoneller')} ({icerdekilerListesi.length})</h2>
           {icerdekilerListesi.length === 0 ? (
             <div style={{ padding: '20px 0', color: 'var(--ink-soft)', fontSize: 13, textAlign: 'center' }}>
-              Şu an aktif mesaiye başlamış personel bulunmuyor.
+              {t('aktifMesaiYok')}
             </div>
           ) : (
             <div style={{ display: 'grid', gap: 8 }}>
@@ -479,8 +479,8 @@ function GenelBakis({ onSekmeDegistir }) {
         {/* SAĞ: BU AY PERSONEL ÇALIŞMA SÜRELERİ & HAKEDİŞ DAĞILIMI */}
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <h2 className="section" style={{ margin: 0 }}>⏱️ Personel Çalışma Süreleri (Bu Ay)</h2>
-            <span style={{ fontSize: 11, color: 'var(--ink-soft)' }}>Giriş/Çıkış saatleri</span>
+            <h2 className="section" style={{ margin: 0 }}>⏱️ {t('personelCalismaSureleri')} ({t('buAy')})</h2>
+            <span style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{t('girisCikisSaatleri')}</span>
           </div>
           <div style={{ display: 'grid', gap: 8, maxHeight: 320, overflowY: 'auto' }}>
             {personelSaatListesi.map((p) => (
@@ -507,7 +507,7 @@ function GenelBakis({ onSekmeDegistir }) {
       {/* 🧾 LOKASYON BAZLI HARCAMALAR */}
       {lokasyonOzet.length > 0 && (
         <div className="card">
-          <h2 className="section">🏢 Lokasyon Bazlı Şantiye Harcamaları Dağılımı</h2>
+          <h2 className="section">🏢 {t('lokasyonBazliHarcamalar')}</h2>
           <table>
             <thead><tr><th>Lokasyon</th><th>Kalem</th><th>Toplam</th></tr></thead>
             <tbody>
@@ -899,9 +899,9 @@ function GorevlerTab() {
         <select value={yOncelik} onChange={(e) => setYOncelik(e.target.value)}>
           <option>Düşük</option><option>Normal</option><option>Yüksek</option><option>Acil</option>
         </select>
-        <label>Son tarih</label>
+        <label>{t('sonTarih')}</label>
         <input type="date" value={ySonTarih} onChange={(e) => setYSonTarih(e.target.value)} />
-        <label>Atanacak personel</label>
+        <label>{t('atanacakPersonel')}</label>
         <div className="tag-list">
           {personeller.map((p) => (
             <span
@@ -915,14 +915,14 @@ function GorevlerTab() {
           {personeller.length === 0 && <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Henüz personel yok.</span>}
         </div>
         <button className="action btn-ai" onClick={gorevOlustur} disabled={ekleniyor}>
-          {ekleniyor ? 'Oluşturuluyor...' : 'Görevi Oluştur'}
+          {ekleniyor ? t('ekleniyor') : t('goreviOlustur')}
         </button>
         {mesaj && <div className={'feedback ' + mesaj.tip}>{mesaj.metin}</div>}
       </div>
 
       <div className="card">
         <h2 className="section">{t('sekmeGorevler')}</h2>
-        <label>Durum filtrele</label>
+        <label>{t('durumFiltrele')}</label>
         <select value={durumFiltre} onChange={(e) => setDurumFiltre(e.target.value)}>
           <option>Tümü</option><option>Bekliyor</option><option>Devam Ediyor</option><option>Tamamlandı</option>
         </select>
@@ -1115,7 +1115,7 @@ function SantiyeDefteriTab({ onDurumDegisti }) {
   return (
     <div className="card">
       <h2 className="section">📋 Günlük Faaliyet Raporu — {t('rolFormen')}</h2>
-      <label>Lokasyon filtrele</label>
+      <label>{t('lokasyonFiltrele')}</label>
       <select value={lokasyonFiltre} onChange={(e) => setLokasyonFiltre(e.target.value)}>
         <option>Tümü</option>
         {lokasyonlar.map((l) => <option key={l.ad} value={l.ad}>{l.ad}</option>)}
