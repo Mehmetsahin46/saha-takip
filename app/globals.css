@@ -392,7 +392,7 @@ select {
   cursor: pointer;
 }
 
-/* TABLES */
+/* TABLES & RESPONSIVE STICKY COLUMN */
 .table-scroll-container {
   width: 100%;
   overflow-x: auto;
@@ -410,24 +410,86 @@ table {
   font-size: 13px;
 }
 
-.sticky-col-header {
+.sticky-col-header, .sticky-col-cell {
   position: -webkit-sticky !important;
   position: sticky !important;
   left: 0 !important;
   z-index: 20 !important;
   background-color: var(--bg-soft) !important;
-  box-shadow: 2px 0 5px -1px rgba(0, 0, 0, 0.12) !important;
-  border-right: 1px solid var(--border) !important;
+  box-shadow: 2px 0 6px -1px rgba(0, 0, 0, 0.15) !important;
+  border-right: 2px solid var(--border) !important;
+  min-width: 130px;
+  max-width: 160px;
 }
 
 .sticky-col-cell {
-  position: -webkit-sticky !important;
-  position: sticky !important;
-  left: 0 !important;
-  z-index: 10 !important;
   background-color: var(--card) !important;
-  box-shadow: 2px 0 5px -1px rgba(0, 0, 0, 0.12) !important;
-  border-right: 1px solid var(--border) !important;
+  z-index: 10 !important;
+}
+
+.personel-name {
+  display: block;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.personel-sub {
+  font-size: 10.5px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  .content {
+    padding: 0 8px !important;
+    margin: 8px auto !important;
+  }
+  .card {
+    padding: 12px 10px !important;
+    border-radius: 10px !important;
+    margin-bottom: 12px !important;
+  }
+  .app-header {
+    padding: 10px 12px !important;
+  }
+  .tabbar {
+    padding: 6px 8px !important;
+    gap: 4px !important;
+  }
+  .stat-card {
+    padding: 10px !important;
+  }
+  .stat-card .value {
+    font-size: 18px !important;
+  }
+  
+  /* Mobile compact sticky column: leaves ~70-75% screen width for other columns */
+  .sticky-col-header, .sticky-col-cell {
+    min-width: 90px !important;
+    max-width: 100px !important;
+    width: 95px !important;
+    padding: 6px 4px !important;
+    font-size: 11px !important;
+  }
+
+  .personel-name {
+    max-width: 86px !important;
+    font-size: 11px !important;
+  }
+
+  .personel-sub {
+    max-width: 86px !important;
+    font-size: 9px !important;
+  }
+
+  th, td {
+    padding: 6px 5px !important;
+    font-size: 11px !important;
+  }
 }
 
 th, td {

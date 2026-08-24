@@ -42,6 +42,19 @@ function teklifPdfIndir(teklif) {
 }
 
 // Ondalık saat değerini (örn. 0.03) "1 dk" veya "1 sa 48 dk" gibi okunabilir metne çevirir.
+
+function yasHesapla(dogumTarihiStr) {
+  if (!dogumTarihiStr) return null;
+  const d = new Date(dogumTarihiStr);
+  if (isNaN(d.getTime())) return null;
+  const bugun = new Date();
+  let yas = bugun.getFullYear() - d.getFullYear();
+  const m = bugun.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && bugun.getDate() < d.getDate())) {
+    yas--;
+  }
+  return yas > 0 ? yas : null;
+}
 function sureFormatla(saatOndalik) {
   const toplamDakika = Math.round((Number(saatOndalik) || 0) * 60);
   const saat = Math.floor(toplamDakika / 60);
@@ -2537,17 +2550,17 @@ function PuantajTab() {
 
                 return (
                   <tr key={p.personel_no}>
-                    <td className="sticky-col-cell" style={{ minWidth: 140, fontWeight: 600, whiteSpace: 'nowrap' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span>{p.ad}</span>
+                    <td className="sticky-col-cell">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span className="personel-name" title={p.ad}>{p.ad}</span>
                         {ayrildiMi && (
-                          <span style={{ fontSize: 9, background: 'rgba(220, 38, 38, 0.15)', color: '#ef4444', padding: '1px 5px', borderRadius: 4, fontWeight: 700 }}>
-                            Ayrıldı
+                          <span style={{ fontSize: 8, background: 'rgba(220, 38, 38, 0.15)', color: '#ef4444', padding: '1px 3px', borderRadius: 3, fontWeight: 700, flexShrink: 0 }}>
+                            A
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: 10, color: 'var(--ink-soft)' }}>
-                        {p.gunluk_ucret || 0} PLN/sa {ayrildiMi && `· Ayrılış: ${o.isten_ayrilis_tarihi || '—'}`}
+                      <div className="personel-sub">
+                        {p.gunluk_ucret || 0} zł/sa
                       </div>
                     </td>
                     {Array.from({ length: gunSayisi }, (_, i) => i + 1).map((gun) => {
@@ -3012,9 +3025,9 @@ function HakedisTab() {
             <tbody>
               {satirlar.map((s) => (
                 <tr key={s.personel_no}>
-                  <td className="sticky-col-cell" style={{ minWidth: 150 }}>
-                    <b>{s.ad}</b>
-                    <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{s.personel_no}</div>
+                  <td className="sticky-col-cell">
+                    <span className="personel-name" title={s.ad}>{s.ad}</span>
+                    <div className="personel-sub">{s.personel_no} · {s.rol}</div>
                   </td>
                   <td>{s.rol}</td>
                   <td>{formatPLN(s.saatlikUcret)}/sa</td>
@@ -3313,9 +3326,9 @@ function AvansPrimTab() {
                   const kat = getIslemKategori(k);
                   return (
                     <tr key={k.id}>
-                      <td className="sticky-col-cell" style={{ minWidth: 140 }}>
-                        <b>{k.ad}</b>
-                        <div style={{ fontSize: 10, color: 'var(--ink-soft)' }}>{k.personel_no || ''}</div>
+                      <td className="sticky-col-cell">
+                        <span className="personel-name" title={k.ad}>{k.ad}</span>
+                        <div className="personel-sub">{k.personel_no || ''}</div>
                       </td>
                       <td style={{ fontSize: 11.5, whiteSpace: 'nowrap' }}>{new Date(k.tarih || k.created_at).toLocaleDateString('tr-TR')}</td>
                       <td>
@@ -4137,14 +4150,15 @@ function PersonelYonetimiTab() {
                 <table>
                   <thead>
                     <tr>
-                      <th className="sticky-col-header" style={{ minWidth: 160 }}>Personel / Sicil</th>
+                      <th className="sticky-col-header">Personel / Sicil</th>
                       <th>Görevi & Şantiye</th>
                       <th>Saatlik Ücret</th>
+                      <th>Yaş / D.Tarihi</th>
                       <th>Yıllık İzin (Kalan / Hak)</th>
                       <th>Kimlik / T.C. No</th>
                       <th>İletişim (Telefon / E-posta)</th>
                       <th>İşe Giriş</th>
-                      <th style={{ minWidth: 100 }}>İşlemler</th>
+                      <th style={{ minWidth: 90 }}>İşlemler</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -4155,16 +4169,16 @@ function PersonelYonetimiTab() {
                       const kalan = Math.max(0, toplamHak - kullanilan);
                       return (
                         <tr key={p.id}>
-                          <td className="sticky-col-cell" style={{ minWidth: 160 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <b>{p.ad}</b>
+                          <td className="sticky-col-cell">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <span className="personel-name" title={p.ad}>{p.ad}</span>
                               {o.durum === 'Ayrıldı' && (
-                                <span style={{ fontSize: 9, background: 'rgba(220, 38, 38, 0.15)', color: '#ef4444', padding: '1px 5px', borderRadius: 4, fontWeight: 700 }}>
-                                  🔴 Ayrıldı ({o.isten_ayrilis_tarihi || '—'})
+                                <span style={{ fontSize: 8, background: 'rgba(220, 38, 38, 0.15)', color: '#ef4444', padding: '1px 3px', borderRadius: 3, fontWeight: 700, flexShrink: 0 }}>
+                                  A
                                 </span>
                               )}
                             </div>
-                            <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>No: {p.personel_no}</div>
+                            <div className="personel-sub">No: {p.personel_no}</div>
                           </td>
                           <td>
                             <span className={`status-tag ${p.rol === 'formen' ? 'open' : ''}`}>
@@ -4173,6 +4187,14 @@ function PersonelYonetimiTab() {
                             <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 2 }}>{p.lokasyon || 'Merkez'}</div>
                           </td>
                           <td><b>{formatPLN(p.gunluk_ucret)}/sa</b></td>
+                          <td style={{ fontSize: 12 }}>
+                            {yasHesapla(o.dogum_tarihi) ? <b>{yasHesapla(o.dogum_tarihi)} Yaş</b> : <span style={{ color: 'var(--ink-soft)' }}>—</span>}
+                            {o.dogum_tarihi && (
+                              <div style={{ fontSize: 10, color: 'var(--ink-soft)' }}>
+                                {new Date(o.dogum_tarihi).toLocaleDateString('tr-TR')}
+                              </div>
+                            )}
+                          </td>
                           <td>
                             <div style={{ fontWeight: 700, color: kalan > 0 ? '#16a34a' : 'var(--ink-soft)', fontSize: 13 }}>
                               {kalan} / {toplamHak} Gün
@@ -4248,7 +4270,7 @@ function PersonelYonetimiTab() {
                 <input placeholder="11 haneli T.C. veya pasaport" value={form.tc_no} onChange={(e) => formGuncelle('tc_no', e.target.value)} />
               </div>
               <div>
-                <label>Doğum Tarihi</label>
+                <label>Doğum Tarihi {form.dogum_tarihi && yasHesapla(form.dogum_tarihi) ? `(${yasHesapla(form.dogum_tarihi)} Yaşında)` : ''}</label>
                 <input type="date" value={form.dogum_tarihi} onChange={(e) => formGuncelle('dogum_tarihi', e.target.value)} />
               </div>
             </div>
