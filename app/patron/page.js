@@ -2391,7 +2391,7 @@ function puantajDuzenlemeKontrol(yil, ay, gun, patronKilitsiz = false) {
 
 /* ---------------- PUANTAJ (Saatlik Aylık Matris & Seçim Kutusu) ---------------- */
 function PuantajTab() {
-  const { t, aylar, haftaGunleri } = useLocale();
+  const { t, aylar, haftaGunleri, sureFormatlaLocale } = useLocale();
   const now = new Date();
   const [yil, setYil] = useState(now.getFullYear());
   const [ay, setAy] = useState(now.getMonth() + 1);
@@ -2558,7 +2558,7 @@ function PuantajTab() {
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
         <div>
-          <h2 className="section" style={{ margin: 0 }}>🕒 Aylık Saatlik Puantaj Matrisi</h2>
+          <h2 className="section" style={{ margin: 0 }}>{t('aylikSaatlikPuantaj')}</h2>
           <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 4 }}>
             Sistem personelin giriş-çıkış saatlerini anlık hesaplar. Düzenlemek istediğiniz güne <b>tıklayarak seçim kutusundan</b> saati veya durumu tek tıkla belirleyebilirsiniz.
           </div>
@@ -2569,24 +2569,24 @@ function PuantajTab() {
           onClick={() => setYoneticiKilitsiz(!yoneticiKilitsiz)}
           title="Patron / Yönetici Kilit Durumu"
         >
-          {yoneticiKilitsiz ? '🔓 Yönetici Kilidi Açık (Serbest Düzenleme)' : '🔒 Güvenlik Kilidi Aktif (Kural Geçerli)'}
+          {yoneticiKilitsiz ? '🔓 Yönetici Kilidi Açık (Serbest Düzenleme)' : t('guvenlikKilidiAktif')}
         </button>
       </div>
 
       <div className="grid cols-3" style={{ marginTop: 12 }}>
         <div>
-          <label>Yıl</label>
+          <label>{t('yil')}</label>
           <input type="number" value={yil} onChange={(e) => setYil(Number(e.target.value))} />
         </div>
         <div>
-          <label>Ay</label>
+          <label>{t('ay')}</label>
           <select value={ay} onChange={(e) => setAy(Number(e.target.value))}>
-            {ayAdlari.map((a, i) => <option key={a} value={i + 1}>{a}</option>)}
+            {aylar.map((a, i) => <option key={a} value={i + 1}>{a}</option>)}
           </select>
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-end' }}>
           <button className="action btn-secondary" style={{ margin: 0 }} onClick={disaAktar} disabled={yukleniyor}>
-            📊 Excel Aktar
+            📊 {t('excelAktar')}
           </button>
         </div>
       </div>
@@ -2640,7 +2640,7 @@ function PuantajTab() {
                       title={kontrol.kilitli ? kontrol.neden : 'Düzenlenebilir Gün'}
                     >
                       <div>{gun}</div>
-                      <div style={{ fontWeight: 400, color: 'var(--ink-soft)', fontSize: 10 }}>{HAFTA_KISALTMA[new Date(yil, ay - 1, gun).getDay()]}</div>
+                      <div style={{ fontWeight: 400, color: 'var(--ink-soft)', fontSize: 10 }}>{haftaGunleri[new Date(yil, ay - 1, gun).getDay()]}</div>
                     </th>
                   );
                 })}
@@ -3665,7 +3665,7 @@ function PersonelCariEkstreTab() {
    PERSONEL YÖNETİMİ & ÖZLÜK SİSTEMİ
    ================================================================== */
 function PersonelYonetimiTab() {
-  const { t } = useLocale();
+  const { t, locale, formatRol, formatIzinTuru } = useLocale();
   const [altSekme, setAltSekme] = useState('liste'); // 'liste' | 'yeni' | 'izinler'
   const [personeller, setPersoneller] = useState([]);
   const [lokasyonlar, setLokasyonlar] = useState([]);
@@ -4190,28 +4190,28 @@ function PersonelYonetimiTab() {
           {/* İSTATİSTİK KARTLARI */}
           <div className="grid cols-4" style={{ marginBottom: 14, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
             <div className="stat-card">
-              <div className="label">Toplam Personel</div>
-              <div className="value">{personeller.length} kişi</div>
-              <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>Aktif çalışanlar</div>
+              <div className="label">{t('toplamPersonel')}</div>
+              <div className="value">{personeller.length} {t('kisi')}</div>
+              <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{t('aktifCalisanlar')}</div>
             </div>
             <div className="stat-card">
-              <div className="label">Bekleyen İzin / Avans</div>
+              <div className="label">{t('bekleyenIzinAvans')}</div>
               <div className="value" style={{ color: (bekleyenIzinSayisi + bekleyenAvansSayisi) > 0 ? '#ef4444' : '#16a34a' }}>
-                {bekleyenIzinSayisi + bekleyenAvansSayisi} talep
+                {bekleyenIzinSayisi + bekleyenAvansSayisi} {locale === 'pl' ? 'wniosków' : (locale === 'en' ? 'requests' : 'talep')}
               </div>
               <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>
-                {bekleyenIzinSayisi} izin · {bekleyenAvansSayisi} avans
+                {bekleyenIzinSayisi} {locale === 'pl' ? 'urlopów' : 'izin'} · {bekleyenAvansSayisi} {locale === 'pl' ? 'zaliczek' : 'avans'}
               </div>
             </div>
             <div className="stat-card">
-              <div className="label">Usta & İşçi</div>
-              <div className="value" style={{ color: '#16a34a' }}>{ustaSayisi + isciSayisi} kişi</div>
-              <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{ustaSayisi} usta, {isciSayisi} personel</div>
+              <div className="label">{t('ustaIsci')}</div>
+              <div className="value" style={{ color: '#16a34a' }}>{ustaSayisi + isciSayisi} {t('kisi')}</div>
+              <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{ustaSayisi} {locale === 'pl' ? 'majstrów' : 'usta'}, {isciSayisi} {locale === 'pl' ? 'pracowników' : 'personel'}</div>
             </div>
             <div className="stat-card" style={{ background: 'var(--accent-patron-soft)', borderColor: 'var(--accent-patron)' }}>
-              <div className="label" style={{ color: 'var(--accent-patron)' }}>Günlük Maaş Maliyeti</div>
+              <div className="label" style={{ color: 'var(--accent-patron)' }}>{t('gunlukMaasMaliyeti')}</div>
               <div className="value" style={{ color: 'var(--accent-patron)' }}>{formatPLN(toplamUcretYuku)}</div>
-              <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>Tüm ekip / gün</div>
+              <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{t('tumEkipGun')}</div>
             </div>
           </div>
 
@@ -4220,7 +4220,7 @@ function PersonelYonetimiTab() {
             <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: 14 }}>
               <div style={{ display: 'flex', gap: 8, flex: 1, minWidth: 260 }}>
                 <input
-                  placeholder="🔍 İsim, TC No, Telefon, Personel No veya Şantiye ara..."
+                  placeholder={t('personelAramaPlaceholder')}
                   value={arama}
                   onChange={(e) => setArama(e.target.value)}
                   style={{ margin: 0, padding: '8px 12px', fontSize: 12 }}
@@ -4230,10 +4230,10 @@ function PersonelYonetimiTab() {
                   onChange={(e) => setRolFiltre(e.target.value)}
                   style={{ width: 'auto', margin: 0, padding: '8px 10px', fontSize: 12 }}
                 >
-                  <option value="Tümü">Tüm Görevler</option>
-                  <option value="formen">Formen</option>
-                  <option value="usta">Usta</option>
-                  <option value="personel">Personel</option>
+                  <option value="Tümü">{t('tumGorevler')}</option>
+                  <option value="formen">{formatRol('formen')}</option>
+                  <option value="usta">{formatRol('usta')}</option>
+                  <option value="personel">{formatRol('personel')}</option>
                 </select>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -4243,14 +4243,14 @@ function PersonelYonetimiTab() {
                   onClick={excelPersonelListesiIndir}
                   disabled={!personeller.length}
                 >
-                  📊 Tüm Özlük Listesini İndir (Excel)
+                  {t('tumOzluguIndirExcel')}
                 </button>
                 <button
                   className="action btn-punch"
                   style={{ width: 'auto', margin: 0, padding: '8px 14px', fontSize: 12 }}
                   onClick={() => { formuTemizle(); setAltSekme('yeni'); }}
                 >
-                  ➕ Yeni Personel Ekle
+                  {t('yeniPersonelEkle')}
                 </button>
               </div>
             </div>
@@ -4294,13 +4294,13 @@ function PersonelYonetimiTab() {
                           </td>
                           <td>
                             <span className={`status-tag ${p.rol === 'formen' ? 'open' : ''}`}>
-                              {p.rol === 'formen' ? '⭐ Formen' : (p.rol === 'usta' ? '🔧 Usta' : '👷 Personel')}
+                              {formatRol(p.rol)}
                             </span>
                             <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 2 }}>{p.lokasyon || 'Merkez'}</div>
                           </td>
                           <td><b>{formatPLN(p.gunluk_ucret)}/sa</b></td>
                           <td style={{ fontSize: 12 }}>
-                            {yasHesapla(o.dogum_tarihi) ? <b>{yasHesapla(o.dogum_tarihi)} Yaş</b> : <span style={{ color: 'var(--ink-soft)' }}>—</span>}
+                            {yasHesapla(o.dogum_tarihi) ? <b>{yasHesapla(o.dogum_tarihi)} {locale === 'pl' ? 'lat' : (locale === 'en' ? 'years' : 'Yaş')}</b> : <span style={{ color: 'var(--ink-soft)' }}>—</span>}
                             {o.dogum_tarihi && (
                               <div style={{ fontSize: 10, color: 'var(--ink-soft)' }}>
                                 {new Date(o.dogum_tarihi).toLocaleDateString('tr-TR')}
@@ -4309,9 +4309,9 @@ function PersonelYonetimiTab() {
                           </td>
                           <td>
                             <div style={{ fontWeight: 700, color: kalan > 0 ? '#16a34a' : 'var(--ink-soft)', fontSize: 13 }}>
-                              {kalan} / {toplamHak} Gün
+                              {kalan} / {toplamHak} {t('gun')}
                             </div>
-                            <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>({kullanilan} gün kullanıldı)</div>
+                            <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>({kullanilan} {t('gun')} {t('kullanildi')})</div>
                           </td>
                           <td style={{ fontSize: 11.5 }}>{o.tc_no || '—'}</td>
                           <td style={{ fontSize: 11.5 }}>
@@ -4343,7 +4343,7 @@ function PersonelYonetimiTab() {
                                 onClick={() => duzenleBaslat(p)}
                                 title="Personeli ve Özlük Bilgilerini Düzenle"
                               >
-                                ✏️ Düzenle
+                                ✏️ {t('duzenle')}
                               </button>
                               <button
                                 style={{ border: 'none', background: 'rgba(220, 38, 38, 0.12)', color: '#ef4444', borderRadius: 6, padding: '4px 8px', fontSize: 11, cursor: 'pointer' }}
@@ -4376,22 +4376,22 @@ function PersonelYonetimiTab() {
               {duzenlenenId ? `✏️ Personel Düzenle: ${form.ad}` : '➕ Yeni Personel & Özlük Kaydı'}
             </h2>
             <button className="action btn-secondary" style={{ width: 'auto', margin: 0, padding: '6px 12px', fontSize: 12 }} onClick={() => setAltSekme('liste')}>
-              ← Listeye Dön
+              {t('listeyeDon')}
             </button>
           </div>
 
           <form onSubmit={personelKaydet}>
             {/* GRUP 1: KİMLİK VE KİŞİSEL BİLGİLER */}
             <h3 style={{ fontSize: 13, textTransform: 'uppercase', color: 'var(--accent-patron)', letterSpacing: 0.5, borderBottom: '1px solid var(--border)', paddingBottom: 4, marginTop: 10 }}>
-              1. Kimlik ve Kişisel Bilgiler
+              {t('formGrup1Kimlik')}
             </h3>
             <div className="grid cols-3" style={{ marginTop: 10 }}>
               <div>
-                <label>Adı Soyadı *</label>
+                <label>{t('adSoyad')} *</label>
                 <input required placeholder="örn. Ahmet Yılmaz" value={form.ad} onChange={(e) => formGuncelle('ad', e.target.value)} />
               </div>
               <div>
-                <label>T.C. Kimlik No / Pasaport No</label>
+                <label>{t('kimlikTcNo')}</label>
                 <input placeholder="11 haneli T.C. veya pasaport" value={form.tc_no} onChange={(e) => formGuncelle('tc_no', e.target.value)} />
               </div>
               <div>
@@ -4402,63 +4402,63 @@ function PersonelYonetimiTab() {
 
             <div className="grid cols-4" style={{ marginTop: 10, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
               <div>
-                <label>Doğum Yeri</label>
+                <label>{t('dogumYeri')}</label>
                 <input placeholder="örn. İstanbul, Ankara, Varşova" value={form.dogum_yeri} onChange={(e) => formGuncelle('dogum_yeri', e.target.value)} />
               </div>
               <div>
-                <label>Cinsiyet</label>
+                <label>{t('cinsiyet')}</label>
                 <select value={form.cinsiyet} onChange={(e) => formGuncelle('cinsiyet', e.target.value)}>
-                  <option value="Erkek">Erkek</option>
-                  <option value="Kadın">Kadın</option>
+                  <option value="Erkek">{t('erkek')}</option>
+                  <option value="Kadın">{t('kadin')}</option>
                 </select>
               </div>
               <div>
-                <label>Medeni Hal</label>
+                <label>{t('medeniHal')}</label>
                 <select value={form.medeni_hal} onChange={(e) => formGuncelle('medeni_hal', e.target.value)}>
-                  <option value="Bekar">Bekar</option>
-                  <option value="Evli">Evli</option>
+                  <option value="Bekar">{t('bekar')}</option>
+                  <option value="Evli">{t('evli')}</option>
                 </select>
               </div>
               <div>
-                <label>Çocuk Sayısı</label>
+                <label>{t('cocukSayisi')}</label>
                 <input type="number" min="0" value={form.cocuk_sayisi} onChange={(e) => formGuncelle('cocuk_sayisi', e.target.value)} />
               </div>
             </div>
 
             {/* GRUP 2: İLETİŞİM BİLGİLERİ */}
             <h3 style={{ fontSize: 13, textTransform: 'uppercase', color: 'var(--accent-patron)', letterSpacing: 0.5, borderBottom: '1px solid var(--border)', paddingBottom: 4, marginTop: 22 }}>
-              2. İletişim Bilgileri
+              {t('formGrup2Iletisim')}
             </h3>
             <div className="grid cols-2" style={{ marginTop: 10 }}>
               <div>
-                <label>Cep Telefonu Numarası</label>
+                <label>{t('telefon')}</label>
                 <input placeholder="+48 ... veya +90 ..." value={form.telefon} onChange={(e) => formGuncelle('telefon', e.target.value)} />
               </div>
               <div>
-                <label>E-posta Adresi</label>
+                <label>{t('email')}</label>
                 <input type="email" placeholder="ornek@sirket.com" value={form.email} onChange={(e) => formGuncelle('email', e.target.value)} />
               </div>
             </div>
             <div style={{ marginTop: 10 }}>
-              <label>İkametgah / Ev Adresi</label>
+              <label>{t('adres')}</label>
               <input placeholder="Açık ev veya lojman adresi" value={form.adres} onChange={(e) => formGuncelle('adres', e.target.value)} />
             </div>
 
             {/* GRUP 3: ÇALIŞMA VE POZİSYON BİLGİLERİ */}
             <h3 style={{ fontSize: 13, textTransform: 'uppercase', color: 'var(--accent-patron)', letterSpacing: 0.5, borderBottom: '1px solid var(--border)', paddingBottom: 4, marginTop: 22 }}>
-              3. Çalışma, Görev ve Pozisyon Bilgileri
+              {t('formGrup3Pozisyon')}
             </h3>
             <div className="grid cols-3" style={{ marginTop: 10 }}>
               <div>
-                <label>Personel / Sicil No *</label>
+                <label>{t('personelSicil')} *</label>
                 <input required placeholder="örn. P-101" value={form.personel_no} onChange={(e) => formGuncelle('personel_no', e.target.value)} disabled={!!duzenlenenId} />
               </div>
               <div>
-                <label>Giriş Şifresi *</label>
+                <label>{t('sifre')} *</label>
                 <input required placeholder="Sisteme giriş şifresi" value={form.sifre} onChange={(e) => formGuncelle('sifre', e.target.value)} />
               </div>
               <div>
-                <label>Görevi / Rolü *</label>
+                <label>{t('gorevRolu')} *</label>
                 <select value={form.rol} onChange={(e) => formGuncelle('rol', e.target.value)}>
                   <option value="personel">👷 Personel (Saha Çalışanı)</option>
                   <option value="usta">🔧 Usta</option>
@@ -4469,7 +4469,7 @@ function PersonelYonetimiTab() {
 
             <div className="grid cols-3" style={{ marginTop: 10 }}>
               <div>
-                <label>Bağlı Olduğu Şantiye / Lokasyon</label>
+                <label>{t('bagliLokasyon')}</label>
                 <select value={form.lokasyon} onChange={(e) => formGuncelle('lokasyon', e.target.value)}>
                   <option value="Merkez">Merkez Ofis</option>
                   {lokasyonlar.map((l) => (
@@ -4478,50 +4478,50 @@ function PersonelYonetimiTab() {
                 </select>
               </div>
               <div>
-                <label>Departman / Birim</label>
+                <label>{t('departman')}</label>
                 <input placeholder="örn. Saha Montaj / İnşaat" value={form.departman} onChange={(e) => formGuncelle('departman', e.target.value)} />
               </div>
               <div>
-                <label>İşe Giriş Tarihi</label>
+                <label>{t('iseGirisTarihi')}</label>
                 <input type="date" value={form.ise_giris_tarihi} onChange={(e) => formGuncelle('ise_giris_tarihi', e.target.value)} />
               </div>
             </div>
 
             {/* GRUP 4: FİNANSAL VE İZİN PARAMETRELERİ */}
             <h3 style={{ fontSize: 13, textTransform: 'uppercase', color: 'var(--accent-patron)', letterSpacing: 0.5, borderBottom: '1px solid var(--border)', paddingBottom: 4, marginTop: 22 }}>
-              4. Finansal, Maaş ve Yıllık İzin Parametreleri
+              {t('formGrup4Finans')}
             </h3>
             <div className="grid cols-4" style={{ marginTop: 10, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
               <div>
-                <label>Saatlik Brüt Ücret (PLN / Saat) *</label>
+                <label>{t('saatlikBrutUcret')} *</label>
                 <input type="number" step="0.01" placeholder="0.00" value={form.gunluk_ucret} onChange={(e) => formGuncelle('gunluk_ucret', e.target.value)} required />
               </div>
               <div>
-                <label>Yıllık İzin Hakkı (Gün)</label>
+                <label>{t('yillikIzinHakki')}</label>
                 <input type="number" placeholder="0" value={form.yillik_izin_hakki} onChange={(e) => formGuncelle('yillik_izin_hakki', e.target.value)} required />
               </div>
               <div>
-                <label>Banka Adı</label>
+                <label>{t('bankaAdi')}</label>
                 <input placeholder="örn. Santander Bank, PKO Bank" value={form.banka_adi} onChange={(e) => formGuncelle('banka_adi', e.target.value)} />
               </div>
               <div>
-                <label>IBAN Numarası</label>
+                <label>{t('iban')}</label>
                 <input placeholder="PL61 1090 ..." value={form.iban} onChange={(e) => formGuncelle('iban', e.target.value)} />
               </div>
             </div>
 
             <div style={{ marginTop: 10 }}>
-              <label>Özel Kesinti, Ek Ödeme veya Özlük Notu</label>
+              <label>{t('ozelNot')}</label>
               <input placeholder="örn. Lojman, yemek yardımı, vs." value={form.ozel_not} onChange={(e) => formGuncelle('ozel_not', e.target.value)} />
             </div>
 
             {/* GRUP 5: ÇALIŞMA VE AYRILIŞ DURUMU */}
             <h3 style={{ fontSize: 13, textTransform: 'uppercase', color: 'var(--accent-patron)', letterSpacing: 0.5, borderBottom: '1px solid var(--border)', paddingBottom: 4, marginTop: 22 }}>
-              5. Çalışma Durumu & Ayrılış Kaydı
+              {t('formGrup5Durum')}
             </h3>
             <div className="grid cols-3" style={{ marginTop: 10 }}>
               <div>
-                <label>Çalışma Durumu</label>
+                <label>{t('calismaDurumu')}</label>
                 <select value={form.durum} onChange={(e) => formGuncelle('durum', e.target.value)}>
                   <option value="Aktif">🟢 Aktif Çalışıyor</option>
                   <option value="Ayrıldı">🔴 İşten Ayrıldı / Çıkışı Verildi</option>
@@ -4530,7 +4530,7 @@ function PersonelYonetimiTab() {
               {form.durum === 'Ayrıldı' && (
                 <>
                   <div>
-                    <label>İşten Ayrılış Tarihi</label>
+                    <label>{t('istenAyrilisTarihi')}</label>
                     <input type="date" value={form.isten_ayrilis_tarihi} onChange={(e) => formGuncelle('isten_ayrilis_tarihi', e.target.value)} />
                   </div>
                   <div>
@@ -4580,16 +4580,16 @@ function PersonelYonetimiTab() {
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
                 <div>
-                  <h2 className="section" style={{ margin: 0 }}>🏖️ Personel İzin Talepleri ve Onay Yönetimi</h2>
+                  <h2 className="section" style={{ margin: 0 }}>{t('izinTalepleriBaslik')}</h2>
                   <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 4 }}>
-                    Onaylanan izinler sistemde <b>otomatik olarak puantaj matrisine 'İzinli (İ)'</b> olarak işlenir ve yıllık izin bakiyesinden düşer.
+                    {t('izinTalepleriAciklama')}
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <select value={izinFiltre} onChange={(e) => setIzinFiltre(e.target.value)} style={{ width: 'auto', margin: 0, padding: '6px 12px', fontSize: 12 }}>
                     <option value="Tümü">Tüm Talepler</option>
                     <option value="Bekliyor">⏳ Bekleyenler ({bekleyenIzinSayisi})</option>
-                    <option value="Onaylandı">✓ Onaylananlar</option>
+                    <option value="Onaylandı">✓ {t('onayla')}nanlar</option>
                     <option value="Reddedildi">✕ Reddedilenler</option>
                   </select>
                 </div>
@@ -4602,14 +4602,14 @@ function PersonelYonetimiTab() {
                   <table>
                     <thead>
                       <tr>
-                        <th>Personel</th>
-                        <th>İzin Türü</th>
-                        <th>Tarih Aralığı</th>
-                        <th>Süre</th>
-                        <th>Açıklama / Gerekçe</th>
-                        <th>Talep Tarihi</th>
-                        <th>Durum</th>
-                        <th>İşlem / Karar</th>
+                        <th>{t('personel')}</th>
+                        <th>{t('izinTuru')}</th>
+                        <th>{t('tarihAraligi')}</th>
+                        <th>{t('sure')}</th>
+                        <th>{t('aciklamaGerekce')}</th>
+                        <th>{t('talepTarihi')}</th>
+                        <th>{t('durum')}</th>
+                        <th>{t('islemKarar')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -4648,11 +4648,11 @@ function PersonelYonetimiTab() {
                                   disabled={islemYapiliyor}
                                   title="Talebi Reddet"
                                 >
-                                  ✕ Reddet
+                                  ✕ {t('reddet')}
                                 </button>
                               </div>
                             ) : (
-                              <span style={{ fontSize: 11, color: 'var(--ink-soft)' }}>İşlem Tamamlandı</span>
+                              <span style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{t('islemTamamlandi')}</span>
                             )}
                           </td>
                         </tr>
@@ -4672,7 +4672,7 @@ function PersonelYonetimiTab() {
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
                 <div>
-                  <h2 className="section" style={{ margin: 0 }}>💵 Personel Avans Talepleri ve Onay Yönetimi</h2>
+                  <h2 className="section" style={{ margin: 0 }}>{t('avansTalepleriBaslik')}</h2>
                   <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 4 }}>
                     Onaylanan avanslar <b>otomatik olarak personelin cari hesabına 'Avans'</b> olarak eklenir ve hakedişinden düşülür.
                   </div>
@@ -4715,7 +4715,7 @@ function PersonelYonetimiTab() {
                           <td style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{new Date(a.tarih).toLocaleDateString('tr-TR')}</td>
                           <td>
                             <span className={`status-tag ${a.durum === 'Onaylandı' ? 'open' : (a.durum === 'Reddedildi' ? 'closed' : '')}`}>
-                              {a.durum === 'Onaylandı' ? '✓ Onaylandı' : (a.durum === 'Reddedildi' ? '✕ Reddedildi' : '⏳ Bekliyor')}
+                              {a.durum === 'Onaylandı' ? '✓ ' + t('onaylandi') : (a.durum === 'Reddedildi' ? '✕ ' + t('reddedildi') : '⏳ ' + t('bekliyor'))}
                             </span>
                           </td>
                           <td style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{a.patron_notu || '—'}</td>
